@@ -1,0 +1,105 @@
+.search-filter {
+  background: linear-gradient(135deg, var(--bg-white) 0%, var(--bg-light) 100%);
+  padding: 24px 0;
+  border-bottom: 2px solid var(--primary);
+  box-shadow: var(--shadow-md);
+}
+
+@media (min-width: 768px) {
+  .search-filter {
+    padding: 28px 0;
+  }
+}
+
+.search-bar-wrapper {
+  position: relative;
+  margin: 0 auto 16px auto;
+  max-width: 50%;
+}
+
+@media (max-width: 768px) {
+  .search-bar-wrapper {
+    max-width: 90%;
+  }
+}
+
+.search-icon {
+  position: absolute;
+  left: 18px;
+  top: 50%;
+  transform: translateY(-50%);
+  color: var(--primary);
+  z-index: 1;
+  pointer-events: none;
+}
+
+.search-input {
+  width: 100%;
+  padding: 14px 18px 14px 50px;
+  font-size: 15px;
+  background: var(--bg-white);
+  border: 2px solid var(--primary);
+  border-radius: var(--radius-xl);
+  color: var(--text-dark);
+  transition: all 0.3s ease;
+  font-weight: 500;
+  box-shadow: 0 2px 8px rgba(255, 184, 0, 0.1);
+}
+
+@media (min-width: 768px) {
+  .search-input {
+    padding: 16px 20px 16px 52px;
+    font-size: 16px;
+  }
+}
+
+.search-input:focus {
+  outline: none;
+  border-color: var(--primary-dark);
+  background: var(--bg-white);
+  box-shadow: 0 0 0 4px rgba(255, 184, 0, 0.2), 0 4px 12px rgba(255, 184, 0, 0.2);
+  transform: translateY(-1px);
+}
+
+.filters {
+  display: flex;
+  gap: 12px;
+  justify-content: center;
+}
+
+.filter-select {
+  background: var(--bg-white);
+  border: 2px solid var(--primary);
+  color: var(--text-dark);
+  font-size: 15px;
+  cursor: pointer;
+  flex: 1;
+  padding: 14px 20px;
+  border-radius: var(--radius-xl);
+  font-weight: 600;
+  transition: all 0.3s ease;
+  box-shadow: 0 2px 8px rgba(233, 193, 83, 0.1);
+}
+
+@media (min-width: 768px) {
+  .filter-select {
+    font-size: 16px;
+    flex: none;
+    min-width: 220px;
+    padding: 16px 20px;
+  }
+}
+
+.filter-select:focus {
+  outline: none;
+  border-color: var(--primary-dark);
+  background: var(--bg-white);
+  box-shadow: 0 0 0 4px rgba(233, 193, 83, 0.2), 0 4px 12px rgba(233, 193, 83, 0.2);
+  transform: translateY(-1px);
+}
+
+.filter-select option {
+  background: var(--bg-white);
+  color: var(--text-dark);
+  padding: 12px;
+}
