@@ -17,7 +17,10 @@ const PORT = process.env.PORT || 3001;
 // CORS configuration
 const allowedOrigins = [
   'http://localhost:5173',
+  'http://localhost:5174',
   'http://localhost:3000',
+  'https://nasriphone.com',
+  'https://www.nasriphone.com',
   process.env.FRONTEND_URL
 ].filter(Boolean) as string[];
 
@@ -25,7 +28,12 @@ app.use(cors({
   origin: (origin, callback) => {
     // Allow requests with no origin (mobile apps, curl, etc.)
     if (!origin) return callback(null, true);
+    // Allow exact matches & startsWith for configured origins
     if (allowedOrigins.some(allowed => origin.startsWith(allowed))) {
+      return callback(null, true);
+    }
+    // Allow Vercel preview deployments
+    if (origin.endsWith('.vercel.app')) {
       return callback(null, true);
     }
     callback(new Error('Not allowed by CORS'));
