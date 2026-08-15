@@ -1,0 +1,178 @@
+.brand-marquee {
+  position: relative;
+  width: 100%;
+  max-width: 100%;
+  background: #000000;
+  padding: 14px 0;
+  overflow: hidden;
+  white-space: nowrap;
+  border-bottom: none;
+}
+
+.brand-marquee-bg {
+  position: absolute;
+  inset: 0;
+  z-index: 0;
+  pointer-events: none;
+  overflow: hidden;
+}
+
+.brand-marquee-orb {
+  position: absolute;
+  border-radius: 50%;
+  filter: blur(36px);
+  opacity: 0.45;
+}
+
+.orb-gold {
+  width: 140px;
+  height: 50px;
+  top: -40%;
+  left: 10%;
+  background: rgba(233, 193, 83, 0.3);
+  animation: orb-drift-a 10s ease-in-out infinite;
+  will-change: transform;
+}
+
+.orb-blue {
+  width: 160px;
+  height: 50px;
+  bottom: -45%;
+  right: 14%;
+  background: rgba(0, 102, 204, 0.22);
+  animation: orb-drift-b 14s ease-in-out infinite;
+  will-change: transform;
+}
+
+.orb-soft {
+  width: 100px;
+  height: 40px;
+  top: 20%;
+  left: 55%;
+  background: rgba(255, 255, 255, 0.06);
+  animation: orb-drift-a 12s ease-in-out infinite reverse;
+  will-change: transform;
+}
+
+.brand-marquee-sheen {
+  position: absolute;
+  inset: -20% -30%;
+  background: linear-gradient(
+    105deg,
+    transparent 35%,
+    rgba(255, 255, 255, 0.05) 48%,
+    rgba(233, 193, 83, 0.08) 50%,
+    rgba(255, 255, 255, 0.05) 52%,
+    transparent 65%
+  );
+  animation: sheen-sweep 7s linear infinite;
+}
+
+@keyframes orb-drift-a {
+  0%, 100% { transform: translate(0, 0); }
+  50% { transform: translate(50px, 6px); }
+}
+
+@keyframes orb-drift-b {
+  0%, 100% { transform: translate(0, 0); }
+  50% { transform: translate(-60px, -4px); }
+}
+
+@keyframes sheen-sweep {
+  from { transform: translateX(-40%); }
+  to { transform: translateX(40%); }
+}
+
+.brand-marquee-track {
+  position: relative;
+  z-index: 2;
+  display: inline-flex;
+  align-items: center;
+  gap: 48px;
+  padding-left: 48px;
+  animation: marquee-scroll 40s linear infinite;
+  will-change: transform;
+}
+
+.brand-marquee:hover .brand-marquee-track {
+  animation-play-state: paused;
+}
+
+.brand-marquee-item {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  flex-shrink: 0;
+  height: 24px;
+}
+
+.brand-marquee-logo {
+  max-height: 18px;
+  max-width: 80px;
+  object-fit: contain;
+  filter: brightness(0) invert(1);
+  opacity: 0.9;
+  transition: opacity 0.25s ease, transform 0.25s ease;
+}
+
+.brand-marquee-item:hover .brand-marquee-logo {
+  opacity: 1;
+  transform: scale(1.06);
+}
+
+.brand-marquee-wordmark {
+  font-family: var(--font-display);
+  font-size: 12px;
+  font-weight: 600;
+  letter-spacing: 0.4px;
+  color: #ffffff;
+  opacity: 0.9;
+  text-transform: uppercase;
+  transition: opacity 0.2s ease;
+}
+
+.brand-marquee-item:hover .brand-marquee-wordmark {
+  opacity: 1;
+}
+
+.brand-marquee-fade {
+  position: absolute;
+  top: 0;
+  bottom: 0;
+  width: 80px;
+  z-index: 3;
+  pointer-events: none;
+}
+
+.brand-marquee-fade.left {
+  left: 0;
+  background: linear-gradient(90deg, #000000, transparent);
+}
+
+.brand-marquee-fade.right {
+  right: 0;
+  background: linear-gradient(270deg, #000000, transparent);
+}
+
+@keyframes marquee-scroll {
+  from { transform: translateX(0); }
+  to { transform: translateX(-50%); }
+}
+
+@media (max-width: 640px) {
+  .brand-marquee-bg {
+    display: none;
+  }
+
+  .brand-marquee-track {
+    animation-duration: 28s;
+  }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .brand-marquee-orb,
+  .brand-marquee-sheen,
+  .brand-marquee-track {
+    animation: none;
+  }
+}

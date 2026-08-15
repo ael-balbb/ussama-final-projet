@@ -46,7 +46,7 @@ router.get('/:id', async (req: Request, res: Response): Promise<void> => {
 // POST /api/products - Admin: create product
 router.post('/', authMiddleware, async (req: Request, res: Response): Promise<void> => {
   try {
-    const { name, category, brand, price, stock, description, images } = req.body;
+    const { name, category, brand, price, stock, description, images, colors } = req.body;
 
     if (!name || !category || price === undefined) {
       res.status(400).json({ error: 'Nom, catégorie et prix sont requis' });
@@ -62,7 +62,8 @@ router.post('/', authMiddleware, async (req: Request, res: Response): Promise<vo
         price: Number(price),
         stock: Number(stock) || 0,
         description: description || '',
-        images: images || []
+        images: images || [],
+        colors: Array.isArray(colors) ? colors : []
       }])
       .select()
       .single();
@@ -79,7 +80,7 @@ router.post('/', authMiddleware, async (req: Request, res: Response): Promise<vo
 // PUT /api/products/:id - Admin: update product
 router.put('/:id', authMiddleware, async (req: Request, res: Response): Promise<void> => {
   try {
-    const { name, category, brand, price, stock, description, images } = req.body;
+    const { name, category, brand, price, stock, description, images, colors } = req.body;
 
     const updateData: Record<string, unknown> = {};
     if (name !== undefined) updateData.name = name;
@@ -89,6 +90,7 @@ router.put('/:id', authMiddleware, async (req: Request, res: Response): Promise<
     if (stock !== undefined) updateData.stock = Number(stock);
     if (description !== undefined) updateData.description = description;
     if (images !== undefined) updateData.images = images;
+    if (colors !== undefined) updateData.colors = Array.isArray(colors) ? colors : [];
 
     const { data, error } = await supabase
       .from('products')

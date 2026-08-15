@@ -1,0 +1,39 @@
+.immersive-banner {
+  width: 100%;
+  max-width: var(--page-max);
+  margin: 0 auto;
+  padding: 28px var(--page-gutter) 8px;
+  box-sizing: border-box;
+  display: flex;
+  justify-content: center;
+  content-visibility: auto;
+  contain-intrinsic-size: 400px;
+}
+
+.immersive-banner-frame {
+  width: 100%;
+  border-radius: var(--radius-lg);
+  overflow: hidden;
+  border: 1px solid var(--border);
+  background: #f3f4f6;
+  line-height: 0;
+  box-shadow: 0 8px 28px rgba(0, 0, 0, 0.06);
+}
+
+.immersive-banner-image {
+  display: block;
+  width: 100%;
+  height: auto;
+  object-fit: contain;
+  image-rendering: auto;
+}
+
+@media (max-width: 640px) {
+  .immersive-banner {
+    padding: 16px var(--page-gutter) 4px;
+  }
+
+  .immersive-banner-frame {
+    border-radius: var(--radius-md);
+  }
+}

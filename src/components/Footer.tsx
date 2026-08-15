@@ -1,63 +1,160 @@
 import React from 'react';
-import { MapPin, Phone, Instagram, Facebook, MessageCircle } from 'lucide-react';
+import {
+  Truck,
+  ShieldCheck,
+  RefreshCcw,
+  Instagram,
+  Facebook,
+  MessageCircle,
+  Phone,
+  MapPin,
+} from 'lucide-react';
 import './Footer.css';
+
+const VALUE_PROPS = [
+  { icon: Truck, label: 'Livraison gratuite sur tous les produits' },
+  { icon: ShieldCheck, label: 'Garantie satisfait ou remboursé' },
+  { icon: RefreshCcw, label: 'Retours faciles sous 30 jours' },
+];
+
+const FOOTER_COLUMNS: { title: string; links: { label: string; href: string }[] }[] = [
+  {
+    title: 'Catégories',
+    links: [
+      { label: 'Nouveautés', href: '#nouveautes' },
+      { label: 'Grandes marques', href: '#accueil' },
+      { label: 'Offres & promos', href: '#offres' },
+    ],
+  },
+  {
+    title: 'Boutique',
+    links: [
+      { label: 'Téléphones', href: '#nouveautes' },
+      { label: 'Accessoires', href: '#nouveautes' },
+      { label: 'Packs promo', href: '#offres' },
+      { label: 'Tous les produits', href: '#nouveautes' },
+    ],
+  },
+  {
+    title: 'Entreprise',
+    links: [
+      { label: 'Accueil', href: '#accueil' },
+      { label: 'À propos', href: '#accueil' },
+      { label: 'Nouveautés', href: '#nouveautes' },
+      { label: 'Nous contacter', href: 'tel:0524222744' },
+    ],
+  },
+  {
+    title: 'Infos & Politiques',
+    links: [
+      { label: 'Politique de livraison', href: '#accueil' },
+      { label: 'Politique de retour', href: '#accueil' },
+      { label: 'Conditions générales', href: '#accueil' },
+      { label: 'Garantie', href: '#accueil' },
+      { label: "Centre d'aide", href: 'https://wa.me/212660891219' },
+    ],
+  },
+];
+
+const PAYMENT_METHODS = ['VISA', 'Mastercard', 'CMI', 'PayPal', 'Cash'];
 
 const Footer: React.FC = () => {
   return (
-    <footer className="footer">
-      <div className="container">
-        <div className="footer-content">
-          <div className="footer-section">
-            <h3>NASRI PHONE</h3>
-            <p>Votre boutique de confiance pour téléphones et accessoires au Maroc</p>
+    <>
+      <section className="value-props" aria-label="Avantages">
+        {VALUE_PROPS.map((item) => (
+          <div key={item.label} className="value-prop">
+            <item.icon size={20} strokeWidth={1.5} />
+            <span>{item.label}</span>
           </div>
+        ))}
+      </section>
 
-          <div className="footer-section">
-            <h4>Contact</h4>
-            <div className="footer-links">
-              <a href="tel:0524222744" className="footer-link">
-                <Phone size={18} />
-                <span>05 24 22 27 44</span>
-              </a>
-              <a href="https://wa.me/212660891219" className="footer-link" target="_blank" rel="noopener noreferrer">
-                <MessageCircle size={18} />
-                <span>06 60 89 12 19</span>
-              </a>
-              <div className="footer-link">
-                <MapPin size={18} />
-                <span>المركب التجاري قرب الملعب البلدي ابن جرير</span>
+      <footer className="footer">
+        <div className="footer-inner">
+          <div className="footer-top">
+            <div className="footer-brand">
+              <span className="footer-logo">
+                Nasri<span className="footer-logo-accent">Phone</span>
+              </span>
+              <p className="footer-tagline">
+                Électronique premium pour votre quotidien, partout au Maroc.
+              </p>
+              <div className="footer-contact">
+                <a href="tel:0524222744">
+                  <Phone size={15} strokeWidth={1.5} />
+                  05 24 22 27 44
+                </a>
+                <a href="https://wa.me/212660891219" target="_blank" rel="noopener noreferrer">
+                  <MessageCircle size={15} strokeWidth={1.5} />
+                  06 60 89 12 19
+                </a>
+                <span>
+                  <MapPin size={15} strokeWidth={1.5} />
+                  المركب التجاري قرب الملعب البلدي ابن جرير
+                </span>
+              </div>
+              <div className="footer-socials">
+                <a
+                  href="https://www.instagram.com/nasri_phone83?utm_source=ig_web_button_share_sheet&igsh=ZDNlZDc0MzIxNw=="
+                  target="_blank"
+                  rel="noopener noreferrer"
+                  aria-label="Instagram"
+                >
+                  <Instagram size={18} strokeWidth={1.5} />
+                </a>
+                <a
+                  href="https://www.facebook.com/nasriphone"
+                  target="_blank"
+                  rel="noopener noreferrer"
+                  aria-label="Facebook"
+                >
+                  <Facebook size={18} strokeWidth={1.5} />
+                </a>
+                <a
+                  href="https://wa.me/212660891219"
+                  target="_blank"
+                  rel="noopener noreferrer"
+                  aria-label="WhatsApp"
+                >
+                  <MessageCircle size={18} strokeWidth={1.5} />
+                </a>
               </div>
             </div>
+
+            <div className="footer-columns">
+              {FOOTER_COLUMNS.map((column) => (
+                <div key={column.title} className="footer-column">
+                  <h4>{column.title}</h4>
+                  <ul>
+                    {column.links.map((link) => (
+                      <li key={link.label}>
+                        <a href={link.href}>{link.label}</a>
+                      </li>
+                    ))}
+                  </ul>
+                </div>
+              ))}
+            </div>
           </div>
 
-          <div className="footer-section">
-            <h4>Suivez-nous</h4>
-            <div className="social-links">
-              <a 
-                href="https://www.instagram.com/nasri_phone83?utm_source=ig_web_button_share_sheet&igsh=ZDNlZDc0MzIxNw==" 
-                target="_blank" 
-                rel="noopener noreferrer"
-                className="social-link"
-              >
-                <Instagram size={24} />
-              </a>
-              <a 
-                href="https://www.facebook.com/nasriphone" 
-                target="_blank" 
-                rel="noopener noreferrer"
-                className="social-link"
-              >
-                <Facebook size={24} />
-              </a>
+          <div className="footer-watermark" aria-hidden="true">
+            NasriPhone
+          </div>
+
+          <div className="footer-bottom">
+            <p>&copy; {new Date().getFullYear()} Nasri Phone. Tous droits réservés.</p>
+            <div className="footer-payments" aria-label="Moyens de paiement acceptés">
+              {PAYMENT_METHODS.map((method) => (
+                <span key={method} className="footer-payment-chip">
+                  {method}
+                </span>
+              ))}
             </div>
           </div>
         </div>
-
-        <div className="footer-bottom">
-          <p>&copy; {new Date().getFullYear()} Nasri Phone. Tous droits réservés.</p>
-        </div>
-      </div>
-    </footer>
+      </footer>
+    </>
   );
 };
 

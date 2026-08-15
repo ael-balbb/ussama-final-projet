@@ -1,8 +1,8 @@
 import React, { useState } from 'react';
-import { motion } from 'framer-motion';
-import { ShoppingCart, Star } from 'lucide-react';
+import { ShoppingBag } from 'lucide-react';
 import type { Product } from '../types';
 import ProductModal from './ProductModal';
+import { formatPrice, getBadges, getOriginalPrice } from '../utils/display';
 import './ProductCard.css';
 
 interface ProductCardProps {
@@ -10,74 +10,83 @@ interface ProductCardProps {
   onAddToCart: (product: Product) => void;
 }
 
+const CATEGORY_LABELS: Record<Product['category'], string> = {
+  phone: 'Téléphone',
+  accessory: 'Accessoire',
+};
+
 const ProductCard: React.FC<ProductCardProps> = ({ product, onAddToCart }) => {
   const [isModalOpen, setIsModalOpen] = useState(false);
 
-  const formatPrice = (price: number) => {
-    if (!price || isNaN(price)) return '0 DH';
-    return `${price.toLocaleString('fr-MA')} DH`;
-  };
+  const badges = getBadges(product);
+  const originalPrice = getOriginalPrice(product);
+  const image = product.images?.[0] || product.image || '';
 
   return (
     <>
-    <motion.div
-      className="product-card"
-      initial={{ opacity: 0, scale: 0.9 }}
-      animate={{ opacity: 1, scale: 1 }}
-      whileHover={{ y: -10 }}
-      transition={{ duration: 0.3 }}
-      onClick={() => setIsModalOpen(true)}
-      style={{ cursor: 'pointer' }}
-    >
-      <div className="product-image-wrapper">
-        <img src={product.images?.[0] || product.image || ''} alt={product.name} className="product-image" loading="lazy" />
-        {product.stock && product.stock < 10 && (
-          <motion.div 
-            className="stock-badge"
-            initial={{ scale: 0 }}
-            animate={{ scale: 1 }}
-          >
-            Stock limité!
-          </motion.div>
-        )}
-      </div>
-
-      <div className="product-info">
-        {product.brand && <div className="product-category">{product.brand}</div>}
-        <h3 className="product-name">{product.name}</h3>
-        <p className="product-description">{product.description}</p>
-        
-        <div className="product-rating">
-          {[...Array(5)].map((_, i) => (
-            <Star key={i} size={16} fill="var(--yellow)" color="var(--yellow)" />
-          ))}
-          <span className="rating-text">4.8</span>
+      <article
+        className="product-card"
+        onClick={() => setIsModalOpen(true)}
+      >
+        <div className="product-card-media">
+          {badges.length > 0 && (
+            <div className="product-card-badges">
+              {badges.map((badge) => (
+                <span key={badge.label} className={`product-badge badge-${badge.variant}`}>
+                  {badge.label}
+                </span>
+              ))}
+            </div>
+          )}
+          {image ? (
+            <img
+              src={image}
+              alt={product.name}
+              className="product-card-image"
+              loading="lazy"
+              decoding="async"
+            />
+          ) : (
+            <div className="product-card-image-placeholder" aria-hidden="true" />
+          )}
         </div>
 
-        <div className="product-footer">
-          <div className="product-price">{formatPrice(product.price)}</div>
-          <motion.button
-            className="add-to-cart-btn"
+        <div className="product-card-info">
+          <div className="product-card-text">
+            <span className="product-card-category">
+              {product.brand || CATEGORY_LABELS[product.category]}
+            </span>
+            <h3 className="product-card-name">{product.name}</h3>
+            <div className="product-card-prices">
+              <span className="product-card-price">{formatPrice(product.price)}</span>
+              {originalPrice && (
+                <span className="product-card-price-original">{formatPrice(originalPrice)}</span>
+              )}
+            </div>
+          </div>
+
+          <button
+            type="button"
+            className="product-card-quickadd"
+            aria-label={`Ajouter ${product.name} au panier`}
             onClick={(e) => {
-              e.stopPropagation(); // Prevent opening modal when clicking 'Add' directly
+              e.stopPropagation();
               onAddToCart(product);
             }}
-            whileHover={{ scale: 1.05 }}
-            whileTap={{ scale: 0.95 }}
           >
-            <ShoppingCart size={20} />
-            Ajouter
-          </motion.button>
+            <ShoppingBag size={17} strokeWidth={1.5} />
+          </button>
         </div>
-      </div>
-    </motion.div>
-    
-    <ProductModal
-      product={product}
-      isOpen={isModalOpen}
-      onClose={() => setIsModalOpen(false)}
-      onAddToCart={onAddToCart}
-    />
+      </article>
+
+      {isModalOpen && (
+        <ProductModal
+          product={product}
+          isOpen={isModalOpen}
+          onClose={() => setIsModalOpen(false)}
+          onAddToCart={onAddToCart}
+        />
+      )}
     </>
   );
 };

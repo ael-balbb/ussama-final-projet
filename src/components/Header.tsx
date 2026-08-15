@@ -1,7 +1,6 @@
-import React from 'react';
-import { motion } from 'framer-motion';
-import { ShoppingCart, Sun, Moon } from 'lucide-react';
-import { useTheme } from '../contexts/ThemeContext';
+import React, { useEffect, useState } from 'react';
+import { motion, AnimatePresence } from 'framer-motion';
+import { ShoppingBag, Search, Menu, X } from 'lucide-react';
 import './Header.css';
 
 interface HeaderProps {
@@ -9,56 +8,110 @@ interface HeaderProps {
   onCartClick: () => void;
 }
 
+type NavFilter = 'all' | 'phone' | 'accessory' | null;
+
+const NAV_LINKS: { label: string; href: string; filter: NavFilter }[] = [
+  { label: 'Accueil', href: '#accueil', filter: null },
+  { label: 'Téléphones', href: '#telephones', filter: 'phone' },
+  { label: 'Accessoires', href: '#accessoires', filter: 'accessory' },
+  { label: 'Nouveautés', href: '#nouveautes', filter: 'all' },
+];
+
+const scrollToSection = (href: string) => {
+  const id = href.replace('#', '');
+  const target =
+    document.getElementById(id) ||
+    (id === 'telephones' || id === 'accessoires'
+      ? document.getElementById('nouveautes')
+      : null);
+  target?.scrollIntoView({ behavior: 'smooth', block: 'start' });
+};
+
 const Header: React.FC<HeaderProps> = ({ cartItemsCount, onCartClick }) => {
-  const { theme, toggleTheme } = useTheme();
+  const [menuOpen, setMenuOpen] = useState(false);
+
+  useEffect(() => {
+    if (!menuOpen) return;
+    const onKey = (e: KeyboardEvent) => {
+      if (e.key === 'Escape') setMenuOpen(false);
+    };
+    document.body.style.overflow = 'hidden';
+    window.addEventListener('keydown', onKey);
+    return () => {
+      document.body.style.overflow = '';
+      window.removeEventListener('keydown', onKey);
+    };
+  }, [menuOpen]);
+
+  const handleNavClick = (
+    e: React.MouseEvent<HTMLAnchorElement>,
+    href: string,
+    filter: NavFilter
+  ) => {
+    e.preventDefault();
+    setMenuOpen(false);
+
+    if (filter) {
+      window.dispatchEvent(
+        new CustomEvent('catalog-filter', { detail: { tab: filter } })
+      );
+      window.history.replaceState(null, '', href);
+      // Wait a tick so the mobile drawer can close before scrolling
+      requestAnimationFrame(() => scrollToSection(href));
+      return;
+    }
+
+    window.history.replaceState(null, '', href);
+    requestAnimationFrame(() => scrollToSection(href));
+  };
 
   return (
-    <motion.header 
+    <motion.header
       className="header"
-      initial={{ y: -100 }}
+      initial={{ y: -44 }}
       animate={{ y: 0 }}
-      transition={{ duration: 0.5 }}
+      transition={{ duration: 0.4, ease: 'easeOut' }}
     >
-      <div className="container header-content">
-        <motion.div 
-          className="logo-container"
-          whileHover={{ scale: 1.05 }}
+      <div className="header-inner">
+        <a
+          href="#accueil"
+          className="header-logo"
+          onClick={(e) => handleNavClick(e, '#accueil', null)}
         >
-          <img 
-            src="/logo.jpg" 
-            alt="Nasri Phone Logo" 
-            className="logo"
-            onError={(e) => {
-              e.currentTarget.style.display = 'none';
-              e.currentTarget.nextElementSibling?.classList.add('show-fallback');
-            }}
-          />
-          <div className="fallback-logo">NP</div>
-          <div className="logo-text">
-            <h1>NASRI PHONE</h1>
-          </div>
-        </motion.div>
+          Nasri<span className="header-logo-accent">Phone</span>
+        </a>
+
+        <nav className="header-nav" aria-label="Navigation principale">
+          {NAV_LINKS.map((link) => (
+            <a
+              key={link.label}
+              href={link.href}
+              className="header-nav-link"
+              onClick={(e) => handleNavClick(e, link.href, link.filter)}
+            >
+              {link.label}
+            </a>
+          ))}
+        </nav>
 
         <div className="header-actions">
-          <motion.button
-            className="theme-toggle-button"
-            onClick={toggleTheme}
-            whileHover={{ scale: 1.1 }}
-            whileTap={{ scale: 0.95 }}
-            aria-label="Toggle theme"
+          <a
+            href="#nouveautes"
+            className="header-icon-btn"
+            aria-label="Rechercher"
+            onClick={(e) => handleNavClick(e, '#nouveautes', 'all')}
           >
-            {theme === 'light' ? <Moon size={20} /> : <Sun size={20} />}
-          </motion.button>
-
-          <motion.button
-            className="cart-button"
+            <Search size={16} strokeWidth={1.5} />
+          </a>
+          <button
+            type="button"
+            className="header-icon-btn header-cart-btn"
             onClick={onCartClick}
-            whileHover={{ scale: 1.1 }}
-            whileTap={{ scale: 0.95 }}
+            aria-label="Panier"
           >
-            <ShoppingCart size={24} />
+            <ShoppingBag size={16} strokeWidth={1.5} />
             {cartItemsCount > 0 && (
-              <motion.span 
+              <motion.span
                 className="cart-badge"
                 initial={{ scale: 0 }}
                 animate={{ scale: 1 }}
@@ -67,9 +120,51 @@ const Header: React.FC<HeaderProps> = ({ cartItemsCount, onCartClick }) => {
                 {cartItemsCount}
               </motion.span>
             )}
-          </motion.button>
+          </button>
+          <button
+            type="button"
+            className="header-icon-btn header-menu-btn"
+            aria-label={menuOpen ? 'Fermer le menu' : 'Ouvrir le menu'}
+            aria-expanded={menuOpen}
+            onClick={() => setMenuOpen((open) => !open)}
+          >
+            {menuOpen ? <X size={18} strokeWidth={1.5} /> : <Menu size={18} strokeWidth={1.5} />}
+          </button>
         </div>
       </div>
+
+      <AnimatePresence>
+        {menuOpen && (
+          <>
+            <motion.div
+              className="header-menu-backdrop"
+              initial={{ opacity: 0 }}
+              animate={{ opacity: 1 }}
+              exit={{ opacity: 0 }}
+              onClick={() => setMenuOpen(false)}
+            />
+            <motion.nav
+              className="header-mobile-nav"
+              aria-label="Menu mobile"
+              initial={{ opacity: 0, y: -8 }}
+              animate={{ opacity: 1, y: 0 }}
+              exit={{ opacity: 0, y: -8 }}
+              transition={{ duration: 0.2 }}
+            >
+              {NAV_LINKS.map((link) => (
+                <a
+                  key={link.label}
+                  href={link.href}
+                  className="header-mobile-link"
+                  onClick={(e) => handleNavClick(e, link.href, link.filter)}
+                >
+                  {link.label}
+                </a>
+              ))}
+            </motion.nav>
+          </>
+        )}
+      </AnimatePresence>
     </motion.header>
   );
 };

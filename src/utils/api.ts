@@ -44,7 +44,8 @@ export const fetchProducts = async (): Promise<Product[]> => {
         stock: p.stock || 0,
         brand: p.brand || '',
         images: p.images || [],
-        image: p.images?.[0] || ''
+        colors: Array.isArray(p.colors) ? p.colors : [],
+        image: p.images?.[0] || p.colors?.[0]?.image || ''
       }));
     }
     return [];

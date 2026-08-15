@@ -13,9 +13,13 @@ CREATE TABLE IF NOT EXISTS products (
   stock INTEGER NOT NULL DEFAULT 0,
   description TEXT DEFAULT '',
   images TEXT[] DEFAULT '{}',
+  colors JSONB DEFAULT '[]'::jsonb,
   created_at TIMESTAMPTZ DEFAULT NOW(),
   updated_at TIMESTAMPTZ DEFAULT NOW()
 );
+
+-- Migration for existing DBs (safe to re-run):
+-- ALTER TABLE products ADD COLUMN IF NOT EXISTS colors JSONB DEFAULT '[]'::jsonb;
 
 -- 2. Packs (Promo Packs) Table
 CREATE TABLE IF NOT EXISTS packs (

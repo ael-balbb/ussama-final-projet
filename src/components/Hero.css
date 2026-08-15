@@ -1,0 +1,237 @@
+/* Full-bleed hero — tall enough for readable text + video fills the frame */
+.hero {
+  position: relative;
+  width: 100%;
+  min-height: clamp(520px, 78vh, 860px);
+  display: flex;
+  align-items: center;
+  overflow: hidden;
+  background: #000000;
+  scroll-margin-top: 72px;
+}
+
+.hero-bg {
+  position: absolute;
+  inset: 0;
+  width: 100%;
+  height: 100%;
+  object-fit: cover;
+  object-position: center center;
+  z-index: 0;
+  pointer-events: none;
+  opacity: 0;
+  transition: opacity 0.45s ease;
+  transform: translateZ(0);
+  backface-visibility: hidden;
+  -webkit-backface-visibility: hidden;
+}
+
+.hero-bg.is-ready {
+  opacity: 1;
+}
+
+.hero-overlay {
+  position: absolute;
+  inset: 0;
+  z-index: 1;
+  background: linear-gradient(
+    90deg,
+    rgba(0, 0, 0, 0.68) 0%,
+    rgba(0, 0, 0, 0.4) 36%,
+    rgba(0, 0, 0, 0.12) 68%,
+    rgba(0, 0, 0, 0.2) 100%
+  );
+  pointer-events: none;
+}
+
+.hero-content-wrap {
+  position: relative;
+  z-index: 2;
+  width: 100%;
+  max-width: var(--page-max);
+  margin: 0 auto;
+  padding: 80px var(--page-gutter);
+  box-sizing: border-box;
+}
+
+.hero-content {
+  max-width: 560px;
+  animation: hero-content-in 0.55s ease both;
+}
+
+@keyframes hero-content-in {
+  from {
+    opacity: 0;
+    transform: translateY(16px);
+  }
+  to {
+    opacity: 1;
+    transform: translateY(0);
+  }
+}
+
+.hero-eyebrow {
+  display: inline-flex;
+  align-items: center;
+  gap: 8px;
+  padding: 9px 16px;
+  margin-bottom: 28px;
+  border: 1px solid rgba(255, 255, 255, 0.22);
+  border-radius: var(--radius-pill);
+  font-size: 13px;
+  letter-spacing: -0.12px;
+  color: var(--text-on-dark);
+  background: rgba(0, 0, 0, 0.32);
+  backdrop-filter: blur(10px);
+}
+
+.hero-title {
+  font-family: var(--font-display);
+  font-size: 64px;
+  font-weight: 600;
+  line-height: 1.05;
+  letter-spacing: -0.4px;
+  color: var(--text-on-dark);
+  margin-bottom: 22px;
+  text-shadow: 0 2px 20px rgba(0, 0, 0, 0.45);
+}
+
+.hero-subtitle {
+  font-size: 18px;
+  font-weight: 400;
+  line-height: 1.5;
+  letter-spacing: -0.374px;
+  color: rgba(255, 255, 255, 0.92);
+  margin-bottom: 36px;
+  max-width: 520px;
+  text-shadow: 0 1px 10px rgba(0, 0, 0, 0.4);
+}
+
+.hero-actions {
+  display: flex;
+  align-items: center;
+  gap: 14px;
+  flex-wrap: wrap;
+}
+
+.hero-cta {
+  display: inline-flex;
+  align-items: center;
+  gap: 10px;
+  padding: 15px 28px;
+  background: #e9c153;
+  color: #1d1d1f;
+  font-size: 17px;
+  font-weight: 600;
+  line-height: 1;
+  letter-spacing: -0.2px;
+  border-radius: var(--radius-pill);
+  box-shadow: 0 8px 30px rgba(233, 193, 83, 0.28);
+  transition: background-color 0.2s ease, transform 0.15s ease, box-shadow 0.2s ease;
+}
+
+.hero-cta:hover {
+  background: #f0d07b;
+  box-shadow: 0 10px 36px rgba(233, 193, 83, 0.4);
+}
+
+.hero-cta:active {
+  transform: scale(0.95);
+}
+
+.hero-cta-ghost {
+  display: inline-flex;
+  align-items: center;
+  padding: 15px 24px;
+  border: 1px solid rgba(255, 255, 255, 0.45);
+  border-radius: var(--radius-pill);
+  color: var(--text-on-dark);
+  font-size: 15px;
+  letter-spacing: -0.224px;
+  background: rgba(0, 0, 0, 0.28);
+  backdrop-filter: blur(8px);
+  transition: background-color 0.2s ease, transform 0.15s ease;
+}
+
+.hero-cta-ghost:hover {
+  background: rgba(255, 255, 255, 0.12);
+}
+
+.hero-cta-ghost:active {
+  transform: scale(0.95);
+}
+
+@media (max-width: 1068px) {
+  .hero {
+    min-height: clamp(480px, 70vh, 720px);
+  }
+
+  .hero-title {
+    font-size: 48px;
+  }
+
+  .hero-content-wrap {
+    padding: 64px var(--page-gutter);
+  }
+}
+
+@media (max-width: 640px) {
+  .hero {
+    min-height: clamp(360px, 52vh, 460px);
+    align-items: flex-end;
+  }
+
+  .hero-bg {
+    object-position: center 35%;
+  }
+
+  .hero-overlay {
+    background: linear-gradient(
+      180deg,
+      rgba(0, 0, 0, 0.28) 0%,
+      rgba(0, 0, 0, 0.45) 42%,
+      rgba(0, 0, 0, 0.78) 100%
+    );
+  }
+
+  .hero-content-wrap {
+    padding: 22px var(--page-gutter) 28px;
+  }
+
+  .hero-content {
+    max-width: 100%;
+  }
+
+  .hero-eyebrow {
+    margin-bottom: 14px;
+    font-size: 12px;
+    padding: 8px 14px;
+  }
+
+  .hero-title {
+    font-size: 38px;
+    line-height: 1.08;
+    margin-bottom: 14px;
+    letter-spacing: -0.4px;
+  }
+
+  .hero-subtitle {
+    font-size: 15px;
+    line-height: 1.45;
+    margin-bottom: 20px;
+  }
+
+  .hero-actions {
+    flex-direction: column;
+    align-items: stretch;
+    gap: 8px;
+  }
+
+  .hero-cta,
+  .hero-cta-ghost {
+    justify-content: center;
+    width: 100%;
+    font-size: 14px;
+    padding: 12px 18px;
+  }
+}

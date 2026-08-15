@@ -1,0 +1,147 @@
+.moment-offer {
+  width: 100%;
+  max-width: var(--page-max);
+  margin: 0 auto;
+  padding: 20px var(--page-gutter) 8px;
+  box-sizing: border-box;
+}
+
+.moment-offer-banner {
+  position: relative;
+  min-height: 280px;
+  border-radius: 28px;
+  overflow: hidden;
+  display: flex;
+  align-items: center;
+  background: #ececef;
+  cursor: pointer;
+}
+
+.moment-offer-bg {
+  position: absolute;
+  inset: 0;
+  background-size: cover;
+  background-position: center right;
+  transition: transform 0.6s ease;
+}
+
+.moment-offer-bg-fallback {
+  background:
+    radial-gradient(ellipse at 78% 40%, rgba(255, 255, 255, 0.9) 0%, transparent 55%),
+    linear-gradient(120deg, #e8e8ed 0%, #f5f5f7 45%, #dedee3 100%);
+}
+
+.moment-offer-banner:hover .moment-offer-bg {
+  transform: scale(1.03);
+}
+
+.moment-offer-overlay {
+  position: absolute;
+  inset: 0;
+  background: linear-gradient(
+    90deg,
+    rgba(20, 20, 22, 0.72) 0%,
+    rgba(20, 20, 22, 0.42) 42%,
+    rgba(20, 20, 22, 0.08) 72%,
+    transparent 100%
+  );
+}
+
+.moment-offer-content {
+  position: relative;
+  z-index: 1;
+  padding: 40px 44px;
+  max-width: 520px;
+  display: flex;
+  flex-direction: column;
+  align-items: flex-start;
+  gap: 8px;
+}
+
+.moment-offer-eyebrow {
+  font-size: 13px;
+  letter-spacing: -0.12px;
+  color: rgba(255, 255, 255, 0.8);
+}
+
+.moment-offer-title {
+  font-family: var(--font-display);
+  font-size: 40px;
+  font-weight: 600;
+  line-height: 1.1;
+  letter-spacing: -0.4px;
+  color: #ffffff;
+}
+
+.moment-offer-price {
+  font-size: 16px;
+  letter-spacing: -0.224px;
+  color: rgba(255, 255, 255, 0.88);
+  margin-bottom: 12px;
+}
+
+.moment-offer-cta {
+  display: inline-flex;
+  align-items: center;
+  gap: 8px;
+  padding: 12px 22px;
+  background: var(--bg-white);
+  color: var(--text-dark);
+  font-size: 14px;
+  font-weight: 500;
+  letter-spacing: -0.224px;
+  border: none;
+  border-radius: var(--radius-pill);
+  transition: transform 0.15s ease, background-color 0.2s ease;
+}
+
+.moment-offer-cta:hover {
+  background: var(--bg-light);
+}
+
+.moment-offer-cta:active {
+  transform: scale(0.96);
+}
+
+@media (max-width: 833px) {
+  .moment-offer {
+    padding: 16px var(--page-gutter) 4px;
+  }
+
+  .moment-offer-banner {
+    min-height: 240px;
+    border-radius: 22px;
+  }
+
+  .moment-offer-content {
+    padding: 28px 24px;
+    max-width: 100%;
+  }
+
+  .moment-offer-title {
+    font-size: 30px;
+  }
+}
+
+@media (max-width: 640px) {
+  .moment-offer {
+    padding: 12px var(--page-gutter) 0;
+  }
+
+  .moment-offer-banner {
+    min-height: 220px;
+    border-radius: 18px;
+  }
+
+  .moment-offer-content {
+    padding: 22px 18px;
+  }
+
+  .moment-offer-title {
+    font-size: 24px;
+  }
+
+  .moment-offer-price {
+    font-size: 14px;
+  }
+}

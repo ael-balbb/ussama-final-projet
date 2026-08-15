@@ -11,10 +11,21 @@ import {
   fetchPacks, createPack, updatePack, deletePack,
   fetchOrders, updateOrderStatus, deleteOrder, uploadImages
 } from '../utils/api';
-import type { Product, Pack, Order } from '../types';
+import type { Product, Pack, Order, ProductColor } from '../types';
 import './AdminPanel.css';
 
 type Tab = 'products' | 'packs' | 'orders';
+
+const PRESET_COLORS: { name: string; hex: string }[] = [
+  { name: 'Blanc', hex: '#f5f5f7' },
+  { name: 'Noir', hex: '#1d1d1f' },
+  { name: 'Gris sidéral', hex: '#7a7a7a' },
+  { name: 'Bleu', hex: '#0066cc' },
+  { name: 'Or', hex: '#d4af37' },
+  { name: 'Rouge', hex: '#c41e3a' },
+  { name: 'Vert', hex: '#3d6b4f' },
+  { name: 'Violet', hex: '#5e4b8b' },
+];
 
 interface ProductForm {
   name: string;
@@ -24,6 +35,7 @@ interface ProductForm {
   stock: string;
   description: string;
   images: string[];
+  colors: ProductColor[];
 }
 
 interface PackForm {
@@ -36,7 +48,7 @@ interface PackForm {
 }
 
 const emptyProductForm: ProductForm = {
-  name: '', category: 'phone', brand: '', price: '', stock: '', description: '', images: []
+  name: '', category: 'phone', brand: '', price: '', stock: '', description: '', images: [], colors: []
 };
 
 const emptyPackForm: PackForm = {
@@ -64,6 +76,9 @@ const AdminPanel: React.FC = () => {
   const [productForm, setProductForm] = useState<ProductForm>(emptyProductForm);
   const [packForm, setPackForm] = useState<PackForm>(emptyPackForm);
   const [uploadingImages, setUploadingImages] = useState(false);
+  const [newColorName, setNewColorName] = useState(PRESET_COLORS[0].name);
+  const [newColorHex, setNewColorHex] = useState(PRESET_COLORS[0].hex);
+  const [uploadingColorImage, setUploadingColorImage] = useState(false);
 
   // Filters
   const [searchTerm, setSearchTerm] = useState('');
@@ -133,12 +148,15 @@ const AdminPanel: React.FC = () => {
         price: String(product.price),
         stock: String(product.stock),
         description: product.description,
-        images: product.images || []
+        images: product.images || [],
+        colors: product.colors || []
       });
     } else {
       setEditingProduct(null);
       setProductForm(emptyProductForm);
     }
+    setNewColorName(PRESET_COLORS[0].name);
+    setNewColorHex(PRESET_COLORS[0].hex);
     setShowProductModal(true);
   };
 
@@ -176,9 +194,66 @@ const AdminPanel: React.FC = () => {
     }));
   };
 
+  const handlePresetColorChange = (name: string) => {
+    const preset = PRESET_COLORS.find((c) => c.name === name);
+    setNewColorName(name);
+    if (preset) setNewColorHex(preset.hex);
+  };
+
+  const handleColorImageUpload = async (e: React.ChangeEvent<HTMLInputElement>) => {
+    const files = e.target.files;
+    if (!files || files.length === 0) return;
+
+    if (productForm.colors.length >= 8) {
+      alert('Maximum 8 coloris par produit');
+      e.target.value = '';
+      return;
+    }
+
+    if (productForm.colors.some((c) => c.name === newColorName)) {
+      alert(`Le coloris "${newColorName}" existe déjà`);
+      e.target.value = '';
+      return;
+    }
+
+    setUploadingColorImage(true);
+    try {
+      const urls = await uploadImages([files[0]]);
+      const imageUrl = urls[0];
+      if (!imageUrl) throw new Error('Upload failed');
+
+      setProductForm((prev) => ({
+        ...prev,
+        colors: [...prev.colors, { name: newColorName, hex: newColorHex, image: imageUrl }],
+      }));
+    } catch (error) {
+      console.error('Color upload error:', error);
+      alert('Erreur lors du téléchargement de l\'image du coloris');
+    } finally {
+      setUploadingColorImage(false);
+      e.target.value = '';
+    }
+  };
+
+  const removeColor = (index: number) => {
+    setProductForm((prev) => ({
+      ...prev,
+      colors: prev.colors.filter((_, i) => i !== index),
+    }));
+  };
+
   const handleProductSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
     try {
+      const colorImages = productForm.colors.map((c) => c.image).filter(Boolean);
+      // Prefer color photos first so the storefront card matches the default coloris
+      const images = colorImages.length
+        ? [
+            ...colorImages,
+            ...productForm.images.filter((url) => !colorImages.includes(url)),
+          ]
+        : productForm.images;
+
       const data = {
         name: productForm.name,
         category: productForm.category,
@@ -186,7 +261,8 @@ const AdminPanel: React.FC = () => {
         price: Number(productForm.price),
         stock: Number(productForm.stock),
         description: productForm.description,
-        images: productForm.images
+        images,
+        colors: productForm.colors
       };
 
       if (editingProduct) {
@@ -847,6 +923,76 @@ const AdminPanel: React.FC = () => {
                     )}
                   </div>
                 </div>
+
+                {productForm.category === 'phone' && (
+                  <div className="form-group-admin">
+                    <label>
+                      Coloris ({productForm.colors.length}/8)
+                      {uploadingColorImage && <span className="uploading-badge">Téléchargement...</span>}
+                    </label>
+                    <p className="form-hint">
+                      Ajoutez chaque coloris avec sa photo. Sur la boutique, cliquer un coloris change l&apos;image.
+                    </p>
+
+                    {productForm.colors.length > 0 && (
+                      <div className="colors-admin-list">
+                        {productForm.colors.map((color, idx) => (
+                          <div key={`${color.name}-${idx}`} className="color-admin-item">
+                            <img src={color.image} alt={color.name} />
+                            <span
+                              className="color-admin-swatch"
+                              style={{ backgroundColor: color.hex }}
+                              aria-hidden="true"
+                            />
+                            <span className="color-admin-name">{color.name}</span>
+                            <button
+                              type="button"
+                              className="remove-image-btn"
+                              onClick={() => removeColor(idx)}
+                              aria-label={`Supprimer ${color.name}`}
+                            >
+                              <X size={14} />
+                            </button>
+                          </div>
+                        ))}
+                      </div>
+                    )}
+
+                    {productForm.colors.length < 8 && (
+                      <div className="color-add-row">
+                        <select
+                          value={newColorName}
+                          onChange={(e) => handlePresetColorChange(e.target.value)}
+                          aria-label="Nom du coloris"
+                        >
+                          {PRESET_COLORS.map((c) => (
+                            <option key={c.name} value={c.name}>
+                              {c.name}
+                            </option>
+                          ))}
+                        </select>
+                        <label className="color-hex-picker" title="Couleur du pastille">
+                          <input
+                            type="color"
+                            value={newColorHex}
+                            onChange={(e) => setNewColorHex(e.target.value)}
+                          />
+                        </label>
+                        <label className={`image-upload-btn color-image-upload ${uploadingColorImage ? 'disabled' : ''}`}>
+                          <Upload size={20} />
+                          <span>Image du coloris</span>
+                          <input
+                            type="file"
+                            accept="image/jpeg,image/png,image/webp"
+                            onChange={handleColorImageUpload}
+                            disabled={uploadingColorImage}
+                            style={{ display: 'none' }}
+                          />
+                        </label>
+                      </div>
+                    )}
+                  </div>
+                )}
 
                 <div className="modal-actions">
                   <button type="button" className="btn-cancel" onClick={() => setShowProductModal(false)}>

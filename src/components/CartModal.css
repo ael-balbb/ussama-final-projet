@@ -58,7 +58,8 @@
   margin: 0;
   font-size: 20px;
   color: var(--text-dark);
-  font-weight: 800;
+  font-weight: 600;
+  letter-spacing: -0.374px;
 }
 
 @media (min-width: 768px) {
@@ -232,7 +233,7 @@
 
 .quantity-btn:hover {
   background: var(--primary);
-  color: #000;
+  color: #ffffff;
   border-color: var(--primary);
 }
 
@@ -276,8 +277,9 @@
 
 .total-amount {
   font-size: 26px;
-  font-weight: 900;
-  color: var(--primary);
+  font-weight: 600;
+  letter-spacing: -0.374px;
+  color: var(--text-dark);
 }
 
 @media (min-width: 768px) {
@@ -290,14 +292,14 @@
   width: 100%;
   padding: 14px;
   background: var(--primary);
-  color: #000000;
+  color: #ffffff;
   border: none;
-  border-radius: var(--radius-md);
-  font-size: 16px;
-  font-weight: 800;
+  border-radius: var(--radius-pill);
+  font-size: 17px;
+  font-weight: 400;
+  letter-spacing: -0.374px;
   cursor: pointer;
-  box-shadow: var(--shadow-sm);
-  transition: all 0.2s ease;
+  transition: background-color 0.2s ease, transform 0.15s ease;
 }
 
 @media (min-width: 768px) {
@@ -308,13 +310,11 @@
 }
 
 .checkout-btn:hover {
-  background: var(--primary-dark);
-  transform: translateY(-1px);
-  box-shadow: var(--shadow-yellow);
+  background: var(--primary-focus);
 }
 
 .checkout-btn:active {
-  transform: translateY(0);
+  transform: scale(0.95);
 }
 
 .cart-item-actions {
@@ -327,8 +327,9 @@
 
 .cart-item-total {
   font-size: 16px;
-  font-weight: 800;
-  color: var(--primary);
+  font-weight: 600;
+  letter-spacing: -0.224px;
+  color: var(--text-dark);
 }
 
 @media (min-width: 768px) {

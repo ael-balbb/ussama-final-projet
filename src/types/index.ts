@@ -1,3 +1,9 @@
+export interface ProductColor {
+  name: string;
+  hex: string;
+  image: string;
+}
+
 export interface Product {
   id: string;
   name: string;
@@ -6,6 +12,8 @@ export interface Product {
   price: number;
   image?: string;
   images: string[];
+  /** Optional color variants — each with its own product photo */
+  colors?: ProductColor[];
   description: string;
   stock: number;
   created_at?: string;
