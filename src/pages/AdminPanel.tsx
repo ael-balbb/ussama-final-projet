@@ -32,27 +32,40 @@ interface ProductForm {
   category: 'phone' | 'accessory';
   brand: string;
   price: string;
+  compare_at_price: string;
+  promo_label: string;
   stock: string;
   description: string;
   images: string[];
   colors: ProductColor[];
+  is_featured: boolean;
+  is_new: boolean;
+  is_active: boolean;
+  sort_order: string;
 }
 
 interface PackForm {
   name: string;
   price: string;
+  compare_at_price: string;
+  promo_label: string;
   stock: string;
   description: string;
   image: string;
   color: 'dark' | 'yellow' | 'red';
+  is_active: boolean;
+  sort_order: string;
 }
 
 const emptyProductForm: ProductForm = {
-  name: '', category: 'phone', brand: '', price: '', stock: '', description: '', images: [], colors: []
+  name: '', category: 'phone', brand: '', price: '', compare_at_price: '', promo_label: '',
+  stock: '', description: '', images: [], colors: [], is_featured: false, is_new: false,
+  is_active: true, sort_order: '0'
 };
 
 const emptyPackForm: PackForm = {
-  name: '', price: '', stock: '', description: '', image: '', color: 'dark'
+  name: '', price: '', compare_at_price: '', promo_label: '', stock: '', description: '', image: '',
+  color: 'dark', is_active: true, sort_order: '0'
 };
 
 const AdminPanel: React.FC = () => {
@@ -78,6 +91,7 @@ const AdminPanel: React.FC = () => {
   const [uploadingImages, setUploadingImages] = useState(false);
   const [newColorName, setNewColorName] = useState(PRESET_COLORS[0].name);
   const [newColorHex, setNewColorHex] = useState(PRESET_COLORS[0].hex);
+  const [newColorStock, setNewColorStock] = useState('0');
   const [uploadingColorImage, setUploadingColorImage] = useState(false);
 
   // Filters
@@ -87,6 +101,7 @@ const AdminPanel: React.FC = () => {
 
   // Sidebar mobile toggle
   const [sidebarOpen, setSidebarOpen] = useState(false);
+  const [dataError, setDataError] = useState('');
 
   // Auth check
   useEffect(() => {
@@ -113,9 +128,10 @@ const AdminPanel: React.FC = () => {
   // Load data
   const loadData = useCallback(async () => {
     try {
+      setDataError('');
       const [productData, packData, orderData] = await Promise.all([
-        fetchProducts(),
-        fetchPacks(),
+        fetchProducts({ admin: true }),
+        fetchPacks({ admin: true }),
         fetchOrders()
       ]);
       setProducts(productData);
@@ -123,6 +139,7 @@ const AdminPanel: React.FC = () => {
       setOrders(orderData);
     } catch (error) {
       console.error('Error loading data:', error);
+      setDataError(error instanceof Error ? error.message : 'Impossible de charger les données');
     }
   }, []);
 
@@ -146,10 +163,16 @@ const AdminPanel: React.FC = () => {
         category: product.category,
         brand: product.brand,
         price: String(product.price),
+        compare_at_price: product.compare_at_price == null ? '' : String(product.compare_at_price),
+        promo_label: product.promo_label || '',
         stock: String(product.stock),
         description: product.description,
         images: product.images || [],
-        colors: product.colors || []
+        colors: product.colors || [],
+        is_featured: product.is_featured === true,
+        is_new: product.is_new === true,
+        is_active: product.is_active !== false,
+        sort_order: String(product.sort_order || 0)
       });
     } else {
       setEditingProduct(null);
@@ -157,6 +180,7 @@ const AdminPanel: React.FC = () => {
     }
     setNewColorName(PRESET_COLORS[0].name);
     setNewColorHex(PRESET_COLORS[0].hex);
+    setNewColorStock('0');
     setShowProductModal(true);
   };
 
@@ -224,7 +248,14 @@ const AdminPanel: React.FC = () => {
 
       setProductForm((prev) => ({
         ...prev,
-        colors: [...prev.colors, { name: newColorName, hex: newColorHex, image: imageUrl }],
+        colors: [...prev.colors, {
+          name: newColorName,
+          hex: newColorHex,
+          image: imageUrl,
+          stock: Math.max(0, Number(newColorStock) || 0),
+          available: true,
+          sort_order: prev.colors.length,
+        }],
       }));
     } catch (error) {
       console.error('Color upload error:', error);
@@ -259,10 +290,16 @@ const AdminPanel: React.FC = () => {
         category: productForm.category,
         brand: productForm.brand,
         price: Number(productForm.price),
+        compare_at_price: productForm.compare_at_price ? Number(productForm.compare_at_price) : null,
+        promo_label: productForm.promo_label,
         stock: Number(productForm.stock),
         description: productForm.description,
         images,
-        colors: productForm.colors
+        colors: productForm.colors,
+        is_featured: productForm.is_featured,
+        is_new: productForm.is_new,
+        is_active: productForm.is_active,
+        sort_order: Number(productForm.sort_order) || 0
       };
 
       if (editingProduct) {
@@ -275,7 +312,7 @@ const AdminPanel: React.FC = () => {
       loadData();
     } catch (error) {
       console.error('Error saving product:', error);
-      alert('Erreur lors de la sauvegarde');
+      alert(error instanceof Error ? error.message : 'Erreur lors de la sauvegarde');
     }
   };
 
@@ -296,10 +333,14 @@ const AdminPanel: React.FC = () => {
       setPackForm({
         name: pack.name,
         price: String(pack.price),
+        compare_at_price: pack.compare_at_price == null ? '' : String(pack.compare_at_price),
+        promo_label: pack.promo_label || '',
         stock: String(pack.stock),
         description: pack.description,
         image: pack.image,
-        color: pack.color
+        color: pack.color,
+        is_active: pack.is_active !== false,
+        sort_order: String(pack.sort_order || 0)
       });
     } else {
       setEditingPack(null);
@@ -329,10 +370,14 @@ const AdminPanel: React.FC = () => {
       const data = {
         name: packForm.name,
         price: Number(packForm.price),
+        compare_at_price: packForm.compare_at_price ? Number(packForm.compare_at_price) : null,
+        promo_label: packForm.promo_label,
         stock: Number(packForm.stock),
         description: packForm.description,
         image: packForm.image,
-        color: packForm.color
+        color: packForm.color,
+        is_active: packForm.is_active,
+        sort_order: Number(packForm.sort_order) || 0
       };
 
       if (editingPack) {
@@ -345,7 +390,7 @@ const AdminPanel: React.FC = () => {
       loadData();
     } catch (error) {
       console.error('Error saving pack:', error);
-      alert('Erreur lors de la sauvegarde');
+      alert(error instanceof Error ? error.message : 'Erreur lors de la sauvegarde');
     }
   };
 
@@ -489,10 +534,18 @@ const AdminPanel: React.FC = () => {
           </div>
         </header>
 
+        {dataError && (
+          <div className="admin-data-error" role="alert">
+            <AlertCircle size={17} />
+            <span>{dataError}</span>
+            <button type="button" onClick={loadData}>Réessayer</button>
+          </div>
+        )}
+
         {/* Stats Cards */}
         <div className="admin-stats">
           <motion.div className="stat-card" whileHover={{ y: -4 }}>
-            <div className="stat-icon" style={{ background: 'linear-gradient(135deg, #E9C153, #D4AD43)' }}>
+            <div className="stat-icon" style={{ background: '#E9C153' }}>
               <DollarSign size={22} />
             </div>
             <div className="stat-info">
@@ -501,7 +554,7 @@ const AdminPanel: React.FC = () => {
             </div>
           </motion.div>
           <motion.div className="stat-card" whileHover={{ y: -4 }}>
-            <div className="stat-icon" style={{ background: 'linear-gradient(135deg, #3b82f6, #1d4ed8)' }}>
+            <div className="stat-icon" style={{ background: '#3b82f6' }}>
               <ClipboardList size={22} />
             </div>
             <div className="stat-info">
@@ -510,7 +563,7 @@ const AdminPanel: React.FC = () => {
             </div>
           </motion.div>
           <motion.div className="stat-card" whileHover={{ y: -4 }}>
-            <div className="stat-icon" style={{ background: 'linear-gradient(135deg, #10b981, #059669)' }}>
+            <div className="stat-icon" style={{ background: '#10b981' }}>
               <Box size={22} />
             </div>
             <div className="stat-info">
@@ -519,7 +572,7 @@ const AdminPanel: React.FC = () => {
             </div>
           </motion.div>
           <motion.div className="stat-card" whileHover={{ y: -4 }}>
-            <div className="stat-icon" style={{ background: 'linear-gradient(135deg, #f59e0b, #d97706)' }}>
+            <div className="stat-icon" style={{ background: '#f59e0b' }}>
               <AlertCircle size={22} />
             </div>
             <div className="stat-info">
@@ -561,14 +614,17 @@ const AdminPanel: React.FC = () => {
                     <th>Nom</th>
                     <th>Catégorie</th>
                     <th>Prix</th>
+                    <th>Promo</th>
                     <th>Stock</th>
+                    <th>Coloris</th>
+                    <th>Statut</th>
                     <th>Actions</th>
                   </tr>
                 </thead>
                 <tbody>
                   {filteredProducts.length === 0 ? (
                     <tr>
-                      <td colSpan={6} className="empty-table">
+                      <td colSpan={9} className="empty-table">
                         <Package size={40} />
                         <p>Aucun produit trouvé</p>
                       </td>
@@ -578,8 +634,8 @@ const AdminPanel: React.FC = () => {
                       <tr key={product.id}>
                         <td>
                           <div className="table-image">
-                            {product.images?.[0] ? (
-                              <img src={product.images[0]} alt={product.name} />
+                            {product.image ? (
+                              <img src={product.image} alt={product.name} />
                             ) : (
                               <div className="no-image"><Image size={20} /></div>
                             )}
@@ -598,8 +654,23 @@ const AdminPanel: React.FC = () => {
                         </td>
                         <td className="price-cell">{Number(product.price).toLocaleString()} DH</td>
                         <td>
+                          {product.compare_at_price ? (
+                            <span className="promo-admin-badge">
+                              {product.promo_label || `${Math.round((1 - product.price / product.compare_at_price) * 100)}%`}
+                            </span>
+                          ) : <span className="table-muted">—</span>}
+                        </td>
+                        <td>
                           <span className={`stock-badge ${product.stock < 5 ? 'low' : 'ok'}`}>
                             {product.stock}
+                          </span>
+                        </td>
+                        <td>
+                          <span className="table-color-count">{product.colors?.length || 0}</span>
+                        </td>
+                        <td>
+                          <span className={`catalog-status-badge ${product.is_active === false ? 'draft' : 'live'}`}>
+                            {product.is_active === false ? 'Masqué' : 'En ligne'}
                           </span>
                         </td>
                         <td>
@@ -657,10 +728,16 @@ const AdminPanel: React.FC = () => {
                       </div>
                     )}
                     <div className="pack-card-body">
+                      <span className={`catalog-status-badge ${pack.is_active === false ? 'draft' : 'live'}`}>
+                        {pack.is_active === false ? 'Masqué' : 'En ligne'}
+                      </span>
                       <h3>{pack.name}</h3>
                       <p className="pack-desc">{pack.description}</p>
                       <div className="pack-card-footer">
                         <span className="pack-card-price">{Number(pack.price).toLocaleString()} DH</span>
+                        {pack.compare_at_price && (
+                          <span className="pack-card-compare">{Number(pack.compare_at_price).toLocaleString()} DH</span>
+                        )}
                         <span className="pack-card-stock">Stock: {pack.stock}</span>
                       </div>
                       <div className="pack-card-actions">
@@ -755,7 +832,7 @@ const AdminPanel: React.FC = () => {
                           <h4>Produits commandés:</h4>
                           {Array.isArray(order.products_json) && order.products_json.map((item, idx) => (
                             <div key={idx} className="order-item-row">
-                              <span>{item.name} ×{item.quantity}</span>
+                              <span>{item.name}{item.color ? ` · ${item.color}` : ''} ×{item.quantity}</span>
                               <span>{(Number(item.price) * item.quantity).toLocaleString()} DH</span>
                             </div>
                           ))}
@@ -814,11 +891,11 @@ const AdminPanel: React.FC = () => {
               exit={{ opacity: 0 }}
             >
               <motion.div
-                className="admin-modal-content"
-                initial={{ scale: 0.9, y: 20 }}
-                animate={{ scale: 1, y: 0 }}
-                exit={{ scale: 0.9, y: 20 }}
-                transition={{ type: 'spring', damping: 25, stiffness: 300 }}
+                className="admin-modal-content admin-editor-drawer"
+                initial={{ x: '100%' }}
+                animate={{ x: 0 }}
+                exit={{ x: '100%' }}
+                transition={{ type: 'spring', damping: 36, stiffness: 420 }}
               >
               <div className="modal-header">
                 <h2>{editingProduct ? 'Modifier Produit' : 'Nouveau Produit'}</h2>
@@ -884,6 +961,44 @@ const AdminPanel: React.FC = () => {
                   </div>
                 </div>
 
+                <div className="form-row-admin">
+                  <div className="form-group-admin">
+                    <label>Prix avant promo (DH)</label>
+                    <input
+                      type="number"
+                      value={productForm.compare_at_price}
+                      onChange={(e) => setProductForm({ ...productForm, compare_at_price: e.target.value })}
+                      placeholder="Laisser vide sans promotion"
+                      min="0"
+                    />
+                  </div>
+                  <div className="form-group-admin">
+                    <label>Libellé promo</label>
+                    <input
+                      type="text"
+                      value={productForm.promo_label}
+                      onChange={(e) => setProductForm({ ...productForm, promo_label: e.target.value })}
+                      placeholder="Ex: OFFRE ÉTÉ"
+                      maxLength={32}
+                    />
+                  </div>
+                  <div className="form-group-admin">
+                    <label>Ordre d’affichage</label>
+                    <input
+                      type="number"
+                      value={productForm.sort_order}
+                      onChange={(e) => setProductForm({ ...productForm, sort_order: e.target.value })}
+                      min="0"
+                    />
+                  </div>
+                </div>
+
+                <div className="form-switches" aria-label="Visibilité du produit">
+                  <label><input type="checkbox" checked={productForm.is_active} onChange={(e) => setProductForm({ ...productForm, is_active: e.target.checked })} /> En ligne</label>
+                  <label><input type="checkbox" checked={productForm.is_featured} onChange={(e) => setProductForm({ ...productForm, is_featured: e.target.checked })} /> En vedette</label>
+                  <label><input type="checkbox" checked={productForm.is_new} onChange={(e) => setProductForm({ ...productForm, is_new: e.target.checked })} /> Nouveau</label>
+                </div>
+
                 <div className="form-group-admin">
                   <label>Description</label>
                   <textarea
@@ -945,6 +1060,33 @@ const AdminPanel: React.FC = () => {
                               aria-hidden="true"
                             />
                             <span className="color-admin-name">{color.name}</span>
+                            <label className="color-stock-field">
+                              <span>Stock</span>
+                              <input
+                                type="number"
+                                min="0"
+                                value={color.stock ?? (Number(productForm.stock) || 0)}
+                                onChange={(e) => setProductForm((prev) => ({
+                                  ...prev,
+                                  colors: prev.colors.map((item, colorIndex) => colorIndex === idx
+                                    ? { ...item, stock: Math.max(0, Number(e.target.value) || 0) }
+                                    : item),
+                                }))}
+                              />
+                            </label>
+                            <label className="color-availability">
+                              <input
+                                type="checkbox"
+                                checked={color.available !== false}
+                                onChange={(e) => setProductForm((prev) => ({
+                                  ...prev,
+                                  colors: prev.colors.map((item, colorIndex) => colorIndex === idx
+                                    ? { ...item, available: e.target.checked }
+                                    : item),
+                                }))}
+                              />
+                              Disponible
+                            </label>
                             <button
                               type="button"
                               className="remove-image-btn"
@@ -978,6 +1120,15 @@ const AdminPanel: React.FC = () => {
                             onChange={(e) => setNewColorHex(e.target.value)}
                           />
                         </label>
+                        <input
+                          className="color-stock-new"
+                          type="number"
+                          min="0"
+                          value={newColorStock}
+                          onChange={(e) => setNewColorStock(e.target.value)}
+                          aria-label="Stock du nouveau coloris"
+                          placeholder="Stock"
+                        />
                         <label className={`image-upload-btn color-image-upload ${uploadingColorImage ? 'disabled' : ''}`}>
                           <Upload size={20} />
                           <span>Image du coloris</span>
@@ -1027,11 +1178,11 @@ const AdminPanel: React.FC = () => {
               exit={{ opacity: 0 }}
             >
               <motion.div
-                className="admin-modal-content"
-                initial={{ scale: 0.9, y: 20 }}
-                animate={{ scale: 1, y: 0 }}
-                exit={{ scale: 0.9, y: 20 }}
-                transition={{ type: 'spring', damping: 25, stiffness: 300 }}
+                className="admin-modal-content admin-editor-drawer"
+                initial={{ x: '100%' }}
+                animate={{ x: 0 }}
+                exit={{ x: '100%' }}
+                transition={{ type: 'spring', damping: 36, stiffness: 420 }}
               >
               <div className="modal-header">
                 <h2>{editingPack ? 'Modifier Pack' : 'Nouveau Pack Promo'}</h2>
@@ -1085,6 +1236,42 @@ const AdminPanel: React.FC = () => {
                       <option value="red">❤️ Rouge</option>
                     </select>
                   </div>
+                </div>
+
+                <div className="form-row-admin">
+                  <div className="form-group-admin">
+                    <label>Prix avant promo (DH)</label>
+                    <input
+                      type="number"
+                      value={packForm.compare_at_price}
+                      onChange={(e) => setPackForm({ ...packForm, compare_at_price: e.target.value })}
+                      placeholder="Laisser vide sans promotion"
+                      min="0"
+                    />
+                  </div>
+                  <div className="form-group-admin">
+                    <label>Libellé promo</label>
+                    <input
+                      type="text"
+                      value={packForm.promo_label}
+                      onChange={(e) => setPackForm({ ...packForm, promo_label: e.target.value })}
+                      placeholder="Ex: PACK DU MOMENT"
+                      maxLength={32}
+                    />
+                  </div>
+                  <div className="form-group-admin">
+                    <label>Ordre d’affichage</label>
+                    <input
+                      type="number"
+                      value={packForm.sort_order}
+                      onChange={(e) => setPackForm({ ...packForm, sort_order: e.target.value })}
+                      min="0"
+                    />
+                  </div>
+                </div>
+
+                <div className="form-switches">
+                  <label><input type="checkbox" checked={packForm.is_active} onChange={(e) => setPackForm({ ...packForm, is_active: e.target.checked })} /> Pack en ligne</label>
                 </div>
 
                 <div className="form-group-admin">

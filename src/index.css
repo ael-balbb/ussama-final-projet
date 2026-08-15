@@ -34,11 +34,12 @@ html {
      ============================================ */
 
   /* Brand & accent — the single interactive color */
-  --primary: #0066cc;            /* {colors.primary} Action Blue */
-  --primary-focus: #0071e3;      /* {colors.primary-focus} */
-  --primary-on-dark: #2997ff;    /* {colors.primary-on-dark} Sky Link Blue */
-  --primary-dark: #0071e3;
-  --primary-light: #2997ff;
+  --primary: #e9c153;
+  --primary-focus: #f1d47f;
+  --primary-on-dark: #f4d35e;
+  --primary-dark: #8a6400;
+  --primary-light: #f4d35e;
+  --focus-ring: #a97800;
 
   /* Surfaces */
   --bg-white: #ffffff;           /* {colors.canvas} */
@@ -71,7 +72,7 @@ html {
   --shadow-sm: 0 1px 0 rgba(0, 0, 0, 0.04);
   --shadow-md: 0 4px 20px rgba(0, 0, 0, 0.08);
   --shadow-lg: 0 12px 32px rgba(0, 0, 0, 0.12);
-  --shadow-yellow: 0 4px 20px rgba(0, 102, 204, 0.18);
+  --shadow-yellow: 0 4px 20px rgba(233, 193, 83, 0.24);
 
   /* Radius scale */
   --radius-xs: 5px;              /* {rounded.xs} */
@@ -151,7 +152,7 @@ button {
 }
 
 a {
-  color: var(--primary);
+  color: var(--primary-dark);
   text-decoration: none;
 }
 
@@ -210,7 +211,7 @@ a {
 
 .btn-primary {
   background: var(--primary);
-  color: #ffffff;
+  color: #111111;
 }
 
 .btn-primary:hover {
@@ -233,13 +234,42 @@ a {
 }
 
 .btn-secondary:hover {
-  background: rgba(0, 102, 204, 0.06);
+  background: rgba(233, 193, 83, 0.12);
 }
 
 input:focus, select:focus, textarea:focus {
   outline: none;
   border-color: var(--primary-focus);
-  box-shadow: 0 0 0 3px rgba(0, 113, 227, 0.15);
+  box-shadow: 0 0 0 3px rgba(169, 120, 0, 0.18);
+}
+
+:where(a, button, input, select, textarea):focus-visible {
+  outline: 2px solid var(--focus-ring);
+  outline-offset: 3px;
+}
+
+.sr-only {
+  position: absolute;
+  width: 1px;
+  height: 1px;
+  padding: 0;
+  margin: -1px;
+  overflow: hidden;
+  clip: rect(0, 0, 0, 0);
+  white-space: nowrap;
+  border: 0;
+}
+
+@media (prefers-reduced-transparency: reduce) {
+  :where(.header, .hero-cta-ghost, .hero-eyebrow) {
+    backdrop-filter: none !important;
+  }
+}
+
+@media (forced-colors: active) {
+  :where(button, a, input, select, textarea) {
+    forced-color-adjust: auto;
+  }
 }
 
 input::placeholder {

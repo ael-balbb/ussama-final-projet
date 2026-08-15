@@ -1,5 +1,5 @@
 import React, { useEffect, useState } from 'react';
-import { motion, AnimatePresence } from 'framer-motion';
+import { motion, AnimatePresence, useReducedMotion } from 'framer-motion';
 import { ShoppingBag, Search, Menu, X } from 'lucide-react';
 import './Header.css';
 
@@ -29,6 +29,7 @@ const scrollToSection = (href: string) => {
 
 const Header: React.FC<HeaderProps> = ({ cartItemsCount, onCartClick }) => {
   const [menuOpen, setMenuOpen] = useState(false);
+  const reduceMotion = useReducedMotion();
 
   useEffect(() => {
     if (!menuOpen) return;
@@ -68,9 +69,9 @@ const Header: React.FC<HeaderProps> = ({ cartItemsCount, onCartClick }) => {
   return (
     <motion.header
       className="header"
-      initial={{ y: -44 }}
+      initial={reduceMotion ? false : { y: -44 }}
       animate={{ y: 0 }}
-      transition={{ duration: 0.4, ease: 'easeOut' }}
+      transition={reduceMotion ? { duration: 0 } : { type: 'spring', stiffness: 360, damping: 34 }}
     >
       <div className="header-inner">
         <a
@@ -115,7 +116,7 @@ const Header: React.FC<HeaderProps> = ({ cartItemsCount, onCartClick }) => {
                 className="cart-badge"
                 initial={{ scale: 0 }}
                 animate={{ scale: 1 }}
-                transition={{ type: 'spring', stiffness: 500 }}
+                transition={reduceMotion ? { duration: 0 } : { type: 'spring', stiffness: 500, damping: 28 }}
               >
                 {cartItemsCount}
               </motion.span>
@@ -146,10 +147,10 @@ const Header: React.FC<HeaderProps> = ({ cartItemsCount, onCartClick }) => {
             <motion.nav
               className="header-mobile-nav"
               aria-label="Menu mobile"
-              initial={{ opacity: 0, y: -8 }}
+              initial={reduceMotion ? { opacity: 0 } : { opacity: 0, y: -8 }}
               animate={{ opacity: 1, y: 0 }}
-              exit={{ opacity: 0, y: -8 }}
-              transition={{ duration: 0.2 }}
+              exit={reduceMotion ? { opacity: 0 } : { opacity: 0, y: -8 }}
+              transition={reduceMotion ? { duration: 0 } : { type: 'spring', stiffness: 430, damping: 38 }}
             >
               {NAV_LINKS.map((link) => (
                 <a

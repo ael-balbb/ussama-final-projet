@@ -1,10 +1,12 @@
 import React, { useEffect, useRef, useState } from 'react';
-import { ArrowRight, Truck } from 'lucide-react';
+import { motion, useReducedMotion } from 'framer-motion';
+import { ArrowRight } from 'lucide-react';
 import './Hero.css';
 
 const Hero: React.FC = () => {
   const videoRef = useRef<HTMLVideoElement>(null);
   const [ready, setReady] = useState(false);
+  const reduceMotion = useReducedMotion();
 
   useEffect(() => {
     const video = videoRef.current;
@@ -48,6 +50,7 @@ const Hero: React.FC = () => {
         loop
         playsInline
         preload="metadata"
+        poster="/store-background.jpg"
         aria-hidden="true"
       >
         <source src="/hero-background.mp4?v=okkey1" type="video/mp4" />
@@ -55,12 +58,12 @@ const Hero: React.FC = () => {
       <div className="hero-overlay" aria-hidden="true" />
 
       <div className="hero-content-wrap">
-        <div className="hero-content">
-          <span className="hero-eyebrow">
-            <Truck size={14} strokeWidth={1.5} />
-            Livraison express partout au Maroc
-          </span>
-
+        <motion.div
+          className="hero-content"
+          initial={reduceMotion ? { opacity: 1 } : { opacity: 0, y: 20 }}
+          animate={{ opacity: 1, y: 0 }}
+          transition={reduceMotion ? { duration: 0 } : { type: 'spring', stiffness: 170, damping: 24 }}
+        >
           <h1 className="hero-title">
             Boostez votre
             <br />
@@ -69,20 +72,28 @@ const Hero: React.FC = () => {
 
           <p className="hero-subtitle">
             Découvrez les derniers smartphones, accessoires et objets connectés
-            aux meilleurs prix. Les plus grandes marques, avec livraison rapide
-            et paiement à la livraison.
+            aux meilleurs prix. Les plus grandes marques, avec livraison partout
+            au Maroc et paiement à la livraison.
           </p>
 
           <div className="hero-actions">
-            <a href="#nouveautes" className="hero-cta">
+            <motion.a
+              href="#nouveautes"
+              className="hero-cta"
+              whileTap={reduceMotion ? undefined : { scale: 0.96 }}
+            >
               Explorer les produits
               <ArrowRight size={18} strokeWidth={1.5} />
-            </a>
-            <a href="#nouveautes" className="hero-cta-ghost">
+            </motion.a>
+            <motion.a
+              href="#nouveautes"
+              className="hero-cta-ghost"
+              whileTap={reduceMotion ? undefined : { scale: 0.96 }}
+            >
               Voir les nouveautés
-            </a>
+            </motion.a>
           </div>
-        </div>
+        </motion.div>
       </div>
     </section>
   );

@@ -3,6 +3,7 @@ import { motion } from 'framer-motion';
 import { X, Send, CheckCircle } from 'lucide-react';
 import type { OrderForm, CartItem } from '../types';
 import { submitOrder } from '../utils/api';
+import { getCartItemKey } from '../utils/cart';
 import './CheckoutModal.css';
 
 interface CheckoutModalProps {
@@ -57,7 +58,6 @@ const CheckoutModal: React.FC<CheckoutModalProps> = ({
     city: '',
     address: '',
     phoneNumber: '',
-    quantity: 0,
   });
 
   const [isSubmitting, setIsSubmitting] = useState(false);
@@ -129,7 +129,6 @@ const CheckoutModal: React.FC<CheckoutModalProps> = ({
       city: '',
       address: '',
       phoneNumber: '',
-      quantity: 0,
     });
     setIsSuccess(false);
     setErrors({});
@@ -273,9 +272,10 @@ const CheckoutModal: React.FC<CheckoutModalProps> = ({
               <div className="order-summary">
                 <h3>Résumé de la Commande</h3>
                 {cartItems.map((item) => (
-                  <div key={item.product.id} className="summary-item">
+                  <div key={getCartItemKey(item)} className="summary-item">
                     <span>
-                      {item.product.name} x{item.quantity}
+                      {item.product.name}
+                      {item.selectedColor ? ` · ${item.selectedColor.name}` : ''} ×{item.quantity}
                     </span>
                     <span>
                       {(item.product.price * item.quantity).toLocaleString('fr-MA')} DH

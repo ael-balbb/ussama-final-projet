@@ -7,6 +7,12 @@
   contain-intrinsic-size: 320px;
 }
 
+.product-card:focus-visible {
+  outline: 2px solid var(--focus-ring);
+  outline-offset: 6px;
+  border-radius: var(--radius-lg);
+}
+
 /* Product rests on a pearl surface — the only place the system shadow lives */
 .product-card-media {
   position: relative;
@@ -66,7 +72,44 @@
 .badge-promo {
   background: var(--primary);
   border-color: var(--primary);
-  color: #ffffff;
+  color: #111111;
+}
+
+.product-card-meta {
+  min-height: 22px;
+  margin-top: 9px;
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 8px;
+}
+
+.product-card-swatches {
+  display: inline-flex;
+  align-items: center;
+  gap: 5px;
+}
+
+.product-card-swatches > span {
+  width: 13px;
+  height: 13px;
+  border-radius: 50%;
+  border: 1px solid rgba(0, 0, 0, 0.18);
+}
+
+.product-card-swatches small,
+.product-card-stock {
+  color: var(--text-gray);
+  font-size: 11px;
+}
+
+.product-card-stock.out {
+  color: var(--error);
+}
+
+.product-card-quickadd:disabled {
+  opacity: 0.42;
+  cursor: not-allowed;
 }
 
 .badge-stock {

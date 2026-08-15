@@ -1,5 +1,5 @@
 .search-filter {
-  background: linear-gradient(135deg, var(--bg-white) 0%, var(--bg-light) 100%);
+  background: var(--bg-light);
   padding: 24px 0;
   border-bottom: 2px solid var(--primary);
   box-shadow: var(--shadow-md);

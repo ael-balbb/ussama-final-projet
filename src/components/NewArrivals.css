@@ -26,6 +26,58 @@
   flex-wrap: nowrap;
 }
 
+.new-arrivals-intro {
+  max-width: 620px;
+  margin: 10px auto 28px;
+  text-align: center;
+  color: var(--text-gray);
+  font-size: 16px;
+}
+
+.catalog-search {
+  width: min(100%, 520px);
+  height: 48px;
+  margin: 0 auto;
+  padding: 0 16px;
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  border: 1px solid var(--border);
+  border-radius: var(--radius-pill);
+  background: var(--bg-light);
+  color: var(--text-gray);
+}
+
+.catalog-search:focus-within {
+  border-color: var(--focus-ring);
+  box-shadow: 0 0 0 3px rgba(169, 120, 0, 0.12);
+}
+
+.catalog-search input {
+  width: 100%;
+  border: 0;
+  outline: 0;
+  background: transparent;
+  color: var(--text-dark);
+  font: inherit;
+  box-shadow: none;
+}
+
+.catalog-search input:focus {
+  box-shadow: none;
+}
+
+.catalog-status {
+  padding: 64px 20px;
+  text-align: center;
+  color: var(--text-gray);
+  border-block: 1px solid var(--divider-soft);
+}
+
+.catalog-status-error {
+  color: var(--error);
+}
+
 /* {component.configurator-option-chip} — pill chips */
 .new-arrivals-tab {
   padding: 10px 20px;

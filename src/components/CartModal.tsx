@@ -2,14 +2,16 @@ import React from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
 import { X, Plus, Minus, Trash2, ShoppingBag } from 'lucide-react';
 import type { CartItem } from '../types';
+import { getCartItemKey, getVariantStock } from '../utils/cart';
+import { formatPrice } from '../utils/display';
 import './CartModal.css';
 
 interface CartModalProps {
   isOpen: boolean;
   onClose: () => void;
   cartItems: CartItem[];
-  onUpdateQuantity: (productId: string, newQuantity: number) => void;
-  onRemoveItem: (productId: string) => void;
+  onUpdateQuantity: (itemKey: string, newQuantity: number) => void;
+  onRemoveItem: (itemKey: string) => void;
   onCheckout: () => void;
 }
 
@@ -25,10 +27,6 @@ const CartModal: React.FC<CartModalProps> = ({
     (sum, item) => sum + item.product.price * item.quantity,
     0
   );
-
-  const formatPrice = (price: number) => {
-    return `${price.toLocaleString('fr-MA')} DH`;
-  };
 
   return (
     <AnimatePresence>
@@ -73,19 +71,22 @@ const CartModal: React.FC<CartModalProps> = ({
               ) : (
                 cartItems.map((item) => (
                   <motion.div
-                    key={item.product.id}
+                    key={getCartItemKey(item)}
                     className="cart-item"
                     initial={{ opacity: 0, x: 20 }}
                     animate={{ opacity: 1, x: 0 }}
                     exit={{ opacity: 0, x: -20 }}
                   >
                     <img
-                      src={item.product.images?.[0] || item.product.image || ''}
+                      src={item.selectedColor?.image || item.product.images?.[0] || item.product.image || ''}
                       alt={item.product.name}
                       className="cart-item-image"
                     />
                     <div className="cart-item-info">
                       <h4>{item.product.name}</h4>
+                      {item.selectedColor && (
+                        <p className="cart-item-color">Coloris : {item.selectedColor.name}</p>
+                      )}
                       <p className="cart-item-price">
                         {formatPrice(item.product.price)}
                       </p>
@@ -94,7 +95,7 @@ const CartModal: React.FC<CartModalProps> = ({
                           whileHover={{ scale: 1.1 }}
                           whileTap={{ scale: 0.9 }}
                           onClick={() =>
-                            onUpdateQuantity(item.product.id, item.quantity - 1)
+                            onUpdateQuantity(getCartItemKey(item), item.quantity - 1)
                           }
                         >
                           <Minus size={16} />
@@ -104,8 +105,9 @@ const CartModal: React.FC<CartModalProps> = ({
                           whileHover={{ scale: 1.1 }}
                           whileTap={{ scale: 0.9 }}
                           onClick={() =>
-                            onUpdateQuantity(item.product.id, item.quantity + 1)
+                            onUpdateQuantity(getCartItemKey(item), item.quantity + 1)
                           }
+                          disabled={item.quantity >= getVariantStock(item.product.stock, item.selectedColor)}
                         >
                           <Plus size={16} />
                         </motion.button>
@@ -117,7 +119,7 @@ const CartModal: React.FC<CartModalProps> = ({
                       </div>
                       <motion.button
                         className="remove-btn"
-                        onClick={() => onRemoveItem(item.product.id)}
+                        onClick={() => onRemoveItem(getCartItemKey(item))}
                         whileHover={{ scale: 1.1 }}
                         whileTap={{ scale: 0.9 }}
                       >

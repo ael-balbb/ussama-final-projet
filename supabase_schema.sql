@@ -10,10 +10,16 @@ CREATE TABLE IF NOT EXISTS products (
   category TEXT NOT NULL CHECK (category IN ('phone', 'accessory')),
   brand TEXT DEFAULT '',
   price NUMERIC NOT NULL DEFAULT 0,
+  compare_at_price NUMERIC CHECK (compare_at_price IS NULL OR compare_at_price > price),
+  promo_label TEXT NOT NULL DEFAULT '',
   stock INTEGER NOT NULL DEFAULT 0,
   description TEXT DEFAULT '',
   images TEXT[] DEFAULT '{}',
   colors JSONB DEFAULT '[]'::jsonb,
+  is_featured BOOLEAN NOT NULL DEFAULT FALSE,
+  is_new BOOLEAN NOT NULL DEFAULT FALSE,
+  is_active BOOLEAN NOT NULL DEFAULT TRUE,
+  sort_order INTEGER NOT NULL DEFAULT 0,
   created_at TIMESTAMPTZ DEFAULT NOW(),
   updated_at TIMESTAMPTZ DEFAULT NOW()
 );
@@ -26,10 +32,14 @@ CREATE TABLE IF NOT EXISTS packs (
   id UUID DEFAULT gen_random_uuid() PRIMARY KEY,
   name TEXT NOT NULL,
   price NUMERIC NOT NULL DEFAULT 0,
+  compare_at_price NUMERIC CHECK (compare_at_price IS NULL OR compare_at_price > price),
+  promo_label TEXT NOT NULL DEFAULT '',
   stock INTEGER NOT NULL DEFAULT 0,
   description TEXT DEFAULT '',
   image TEXT DEFAULT '',
   color TEXT DEFAULT 'dark' CHECK (color IN ('dark', 'yellow', 'red')),
+  is_active BOOLEAN NOT NULL DEFAULT TRUE,
+  sort_order INTEGER NOT NULL DEFAULT 0,
   created_at TIMESTAMPTZ DEFAULT NOW(),
   updated_at TIMESTAMPTZ DEFAULT NOW()
 );
@@ -64,26 +74,26 @@ BEGIN
   NEW.updated_at = NOW();
   RETURN NEW;
 END;
-$$ LANGUAGE plpgsql;
+$$ LANGUAGE plpgsql
+SET search_path = '';
 
+DROP TRIGGER IF EXISTS update_products_updated_at ON products;
 CREATE TRIGGER update_products_updated_at
   BEFORE UPDATE ON products
   FOR EACH ROW EXECUTE FUNCTION update_updated_at_column();
 
+DROP TRIGGER IF EXISTS update_packs_updated_at ON packs;
 CREATE TRIGGER update_packs_updated_at
   BEFORE UPDATE ON packs
   FOR EACH ROW EXECUTE FUNCTION update_updated_at_column();
 
+DROP TRIGGER IF EXISTS update_orders_updated_at ON orders;
 CREATE TRIGGER update_orders_updated_at
   BEFORE UPDATE ON orders
   FOR EACH ROW EXECUTE FUNCTION update_updated_at_column();
 
--- 6. Insert default admin (password: NasriAdmin2025!)
--- The hash below is for 'NasriAdmin2025!' using bcrypt (10 rounds)
--- You should change the password after first login
-INSERT INTO admins (email, password_hash) 
-VALUES ('admin@nasriphone.com', '$2b$10$placeholder_hash_replace_at_startup')
-ON CONFLICT (email) DO NOTHING;
+-- 6. Create administrators through the protected server bootstrap flow.
+-- Never commit a default password or production password hash.
 
 -- 7. Create Storage Bucket for product images
 -- NOTE: Run this in Supabase Dashboard > Storage > Create new bucket
@@ -99,18 +109,14 @@ CREATE POLICY "Public read access for product images"
 ON storage.objects FOR SELECT
 USING (bucket_id = 'product-images');
 
--- 9. Storage Policy: Allow authenticated uploads (via service key from backend)
-CREATE POLICY "Service key upload for product images"
-ON storage.objects FOR INSERT
-WITH CHECK (bucket_id = 'product-images');
+-- 9. The backend uses service_role for all writes. Do not add public-role
+-- INSERT, UPDATE, or DELETE policies for this bucket.
 
--- 10. Storage Policy: Allow delete (via service key from backend)
-CREATE POLICY "Service key delete for product images"
-ON storage.objects FOR DELETE
-USING (bucket_id = 'product-images');
-
--- 11. Disable RLS on tables (backend uses service_role key)
-ALTER TABLE products DISABLE ROW LEVEL SECURITY;
-ALTER TABLE packs DISABLE ROW LEVEL SECURITY;
-ALTER TABLE orders DISABLE ROW LEVEL SECURITY;
-ALTER TABLE admins DISABLE ROW LEVEL SECURITY;
+-- 10. Lock Data API access. The Railway backend uses service_role, which
+-- bypasses RLS; browser clients never receive that credential.
+ALTER TABLE products ENABLE ROW LEVEL SECURITY;
+ALTER TABLE packs ENABLE ROW LEVEL SECURITY;
+ALTER TABLE orders ENABLE ROW LEVEL SECURITY;
+ALTER TABLE admins ENABLE ROW LEVEL SECURITY;
+REVOKE ALL ON TABLE products, packs, orders, admins FROM anon, authenticated;
+GRANT ALL ON TABLE products, packs, orders, admins TO service_role;

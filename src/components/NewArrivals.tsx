@@ -1,13 +1,14 @@
 import React, { useEffect, useMemo, useState } from 'react';
-import { motion, AnimatePresence } from 'framer-motion';
-import { ChevronLeft } from 'lucide-react';
-import type { Product } from '../types';
+import { motion, AnimatePresence, useReducedMotion } from 'framer-motion';
+import { Search } from 'lucide-react';
+import type { AddToCartHandler, Product } from '../types';
 import ProductCard from './ProductCard';
 import './NewArrivals.css';
 
 interface NewArrivalsProps {
   products: Product[];
-  onAddToCart: (product: Product) => void;
+  status?: 'loading' | 'ready' | 'error';
+  onAddToCart: AddToCartHandler;
 }
 
 type TabKey = 'all' | 'phone' | 'accessory';
@@ -44,20 +45,25 @@ const tabFromHash = (hash: string): TabKey | null => {
   return null;
 };
 
-const NewArrivals: React.FC<NewArrivalsProps> = ({ products, onAddToCart }) => {
+const NewArrivals: React.FC<NewArrivalsProps> = ({ products, status = 'ready', onAddToCart }) => {
   const [activeTab, setActiveTab] = useState<TabKey>('all');
-  const [phoneBrand, setPhoneBrand] = useState<PhoneBrand | null>(null);
+  const [phoneBrand, setPhoneBrand] = useState<PhoneBrand | 'all'>('all');
+  const [query, setQuery] = useState('');
+  const reduceMotion = useReducedMotion();
+  const springTransition = reduceMotion
+    ? { duration: 0 }
+    : { type: 'spring' as const, stiffness: 280, damping: 28 };
 
   const handleTabClick = (key: TabKey) => {
     setActiveTab(key);
-    setPhoneBrand(null);
+    setPhoneBrand('all');
   };
 
   // Header nav → open the matching category
   useEffect(() => {
     const applyTab = (tab: TabKey) => {
       setActiveTab(tab);
-      setPhoneBrand(null);
+      setPhoneBrand('all');
     };
 
     const onCatalogFilter = (event: Event) => {
@@ -87,15 +93,16 @@ const NewArrivals: React.FC<NewArrivalsProps> = ({ products, onAddToCart }) => {
         if (activeTab === 'all') return true;
         if (activeTab === 'accessory') return p.category === 'accessory';
         if (p.category !== 'phone') return false;
-        if (!phoneBrand) return false;
-        return matchesPhoneBrand(p, phoneBrand);
+        return phoneBrand === 'all' || matchesPhoneBrand(p, phoneBrand);
       })
+      .filter((p) => `${p.name} ${p.brand}`.toLowerCase().includes(query.trim().toLowerCase()))
       .slice()
       .sort(
-        (a, b) =>
-          new Date(b.created_at || 0).getTime() - new Date(a.created_at || 0).getTime()
+        (a, b) => (Number(b.is_featured) - Number(a.is_featured)) ||
+          ((a.sort_order ?? 0) - (b.sort_order ?? 0)) ||
+          (new Date(b.created_at || 0).getTime() - new Date(a.created_at || 0).getTime())
       );
-  }, [products, activeTab, phoneBrand]);
+  }, [products, activeTab, phoneBrand, query]);
 
   const brandCounts = useMemo(() => {
     const phones = products.filter((p) => p.category === 'phone');
@@ -104,10 +111,6 @@ const NewArrivals: React.FC<NewArrivalsProps> = ({ products, onAddToCart }) => {
       iphone: phones.filter((p) => matchesPhoneBrand(p, 'iphone')).length,
     };
   }, [products]);
-
-  if (products.length === 0) return null;
-
-  const showBrandPicker = activeTab === 'phone' && !phoneBrand;
 
   return (
     <section className="new-arrivals" id="nouveautes">
@@ -119,10 +122,26 @@ const NewArrivals: React.FC<NewArrivalsProps> = ({ products, onAddToCart }) => {
         initial={{ opacity: 0, y: 16 }}
         whileInView={{ opacity: 1, y: 0 }}
         viewport={{ once: true, margin: '-60px' }}
-        transition={{ duration: 0.5 }}
+        transition={springTransition}
       >
-        Nouveautés
+        Nos produits
       </motion.h2>
+
+      <p className="new-arrivals-intro">
+        Des appareils et accessoires sélectionnés avec soin, avec des prix et disponibilités
+        synchronisés depuis notre catalogue.
+      </p>
+
+      <label className="catalog-search">
+        <Search size={18} strokeWidth={1.5} aria-hidden="true" />
+        <span className="sr-only">Rechercher un produit</span>
+        <input
+          type="search"
+          value={query}
+          onChange={(event) => setQuery(event.target.value)}
+          placeholder="Rechercher un produit"
+        />
+      </label>
 
       <div className="new-arrivals-tabs" role="tablist" aria-label="Filtrer les nouveautés">
         {TABS.map((tab) => (
@@ -140,73 +159,45 @@ const NewArrivals: React.FC<NewArrivalsProps> = ({ products, onAddToCart }) => {
         ))}
       </div>
 
-      <AnimatePresence mode="wait">
-        {showBrandPicker ? (
-          <motion.div
-            key="brand-picker"
-            className="phone-brand-picker"
-            initial={{ opacity: 0, y: 12 }}
-            animate={{ opacity: 1, y: 0 }}
-            exit={{ opacity: 0, y: -8 }}
-            transition={{ duration: 0.25 }}
-          >
-            <p className="phone-brand-hint">Choisissez une marque</p>
-            <div className="phone-brand-choices">
-              {PHONE_BRANDS.map((brand) => (
-                <button
-                  key={brand.key}
-                  type="button"
-                  className="phone-brand-choice"
-                  onClick={() => setPhoneBrand(brand.key)}
-                >
-                  <img
-                    className="phone-brand-image"
-                    src={brand.image}
-                    alt={brand.label}
-                  />
-                  <span className="phone-brand-meta">
-                    <span className="phone-brand-name">{brand.label}</span>
-                    <span className="phone-brand-count">
-                      {brandCounts[brand.key]} modèle{brandCounts[brand.key] > 1 ? 's' : ''}
-                    </span>
-                  </span>
-                </button>
-              ))}
-            </div>
-          </motion.div>
-        ) : (
+      {activeTab === 'phone' && (
+        <div className="phone-brand-bar" aria-label="Filtrer par marque">
+          <div className="phone-brand-pills">
+            <button
+              type="button"
+              className={`phone-brand-pill ${phoneBrand === 'all' ? 'active' : ''}`}
+              onClick={() => setPhoneBrand('all')}
+            >
+              Toutes
+            </button>
+            {PHONE_BRANDS.map((brand) => (
+              <button
+                key={brand.key}
+                type="button"
+                className={`phone-brand-pill ${phoneBrand === brand.key ? 'active' : ''}`}
+                onClick={() => setPhoneBrand(brand.key)}
+              >
+                {brand.label} · {brandCounts[brand.key]}
+              </button>
+            ))}
+          </div>
+        </div>
+      )}
+
+      {status === 'loading' ? (
+        <div className="catalog-status" role="status">Chargement du catalogue…</div>
+      ) : status === 'error' ? (
+        <div className="catalog-status catalog-status-error" role="alert">
+          Le catalogue est momentanément indisponible. Réessayez dans quelques instants.
+        </div>
+      ) : (
+        <AnimatePresence mode="wait">
           <motion.div
             key={`grid-${activeTab}-${phoneBrand || 'all'}`}
             initial={{ opacity: 0, y: 12 }}
             animate={{ opacity: 1, y: 0 }}
             exit={{ opacity: 0, y: -8 }}
-            transition={{ duration: 0.25 }}
+            transition={springTransition}
           >
-            {activeTab === 'phone' && phoneBrand && (
-              <div className="phone-brand-bar">
-                <button
-                  type="button"
-                  className="phone-brand-back"
-                  onClick={() => setPhoneBrand(null)}
-                >
-                  <ChevronLeft size={16} strokeWidth={1.75} />
-                  Marques
-                </button>
-                <div className="phone-brand-pills">
-                  {PHONE_BRANDS.map((brand) => (
-                    <button
-                      key={brand.key}
-                      type="button"
-                      className={`phone-brand-pill ${phoneBrand === brand.key ? 'active' : ''}`}
-                      onClick={() => setPhoneBrand(brand.key)}
-                    >
-                      {brand.label}
-                    </button>
-                  ))}
-                </div>
-              </div>
-            )}
-
             {visibleProducts.length > 0 ? (
               <div className="new-arrivals-grid">
                 {visibleProducts.map((product) => (
@@ -217,8 +208,8 @@ const NewArrivals: React.FC<NewArrivalsProps> = ({ products, onAddToCart }) => {
               <p className="new-arrivals-empty">Aucun produit dans cette catégorie pour le moment.</p>
             )}
           </motion.div>
-        )}
-      </AnimatePresence>
+        </AnimatePresence>
+      )}
     </section>
   );
 };

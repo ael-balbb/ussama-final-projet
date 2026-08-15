@@ -5,13 +5,33 @@ import { supabase } from '../config/supabase';
 import { authMiddleware, AuthRequest } from '../middleware/auth';
 
 const router = Router();
+const loginAttempts = new Map<string, { count: number; resetAt: number }>();
+const LOGIN_WINDOW_MS = 15 * 60 * 1000;
+const LOGIN_LIMIT = 5;
+
+const loginRateLimit = (req: Request, res: Response, next: () => void): void => {
+  const key = req.ip || 'unknown';
+  const now = Date.now();
+  const current = loginAttempts.get(key);
+  const attempt = !current || current.resetAt <= now
+    ? { count: 0, resetAt: now + LOGIN_WINDOW_MS }
+    : current;
+  attempt.count += 1;
+  loginAttempts.set(key, attempt);
+  if (attempt.count > LOGIN_LIMIT) {
+    res.setHeader('Retry-After', Math.ceil((attempt.resetAt - now) / 1000));
+    res.status(429).json({ error: 'Trop de tentatives. Réessayez plus tard.' });
+    return;
+  }
+  next();
+};
 
 // POST /api/auth/login
-router.post('/login', async (req: Request, res: Response): Promise<void> => {
+router.post('/login', loginRateLimit, async (req: Request, res: Response): Promise<void> => {
   try {
     const { email, password } = req.body;
 
-    if (!email || !password) {
+    if (typeof email !== 'string' || typeof password !== 'string' || !email || !password) {
       res.status(400).json({ error: 'Email et mot de passe requis' });
       return;
     }
@@ -34,6 +54,8 @@ router.post('/login', async (req: Request, res: Response): Promise<void> => {
       res.status(401).json({ error: 'Email ou mot de passe incorrect' });
       return;
     }
+
+    loginAttempts.delete(req.ip || 'unknown');
 
     // Generate JWT
     const jwtSecret = process.env.JWT_SECRET;
@@ -74,6 +96,10 @@ router.post('/change-password', authMiddleware, async (req: AuthRequest, res: Re
 
     if (!currentPassword || !newPassword) {
       res.status(400).json({ error: 'Mot de passe actuel et nouveau requis' });
+      return;
+    }
+    if (typeof newPassword !== 'string' || newPassword.length < 12) {
+      res.status(400).json({ error: 'Le nouveau mot de passe doit contenir au moins 12 caractères' });
       return;
     }
 

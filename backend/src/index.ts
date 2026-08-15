@@ -23,17 +23,32 @@ const allowedOrigins = [
   'https://www.nasriphone.com',
   process.env.FRONTEND_URL
 ].filter(Boolean) as string[];
+const vercelProjectSlug = (process.env.VERCEL_PROJECT_SLUG || 'ussama-final-projet')
+  .toLowerCase()
+  .replace(/[^a-z0-9-]/g, '');
+
+const isAllowedVercelPreview = (origin: string) => {
+  try {
+    const url = new URL(origin);
+    return url.protocol === 'https:' && (
+      url.hostname === `${vercelProjectSlug}.vercel.app` ||
+      (url.hostname.startsWith(`${vercelProjectSlug}-`) && url.hostname.endsWith('.vercel.app'))
+    );
+  } catch {
+    return false;
+  }
+};
 
 app.use(cors({
   origin: (origin, callback) => {
     // Allow requests with no origin (mobile apps, curl, etc.)
     if (!origin) return callback(null, true);
-    // Allow exact matches & startsWith for configured origins
-    if (allowedOrigins.some(allowed => origin.startsWith(allowed))) {
+    // Configured storefront origins must match exactly.
+    if (allowedOrigins.includes(origin)) {
       return callback(null, true);
     }
     // Allow Vercel preview deployments
-    if (origin.endsWith('.vercel.app')) {
+    if (isAllowedVercelPreview(origin)) {
       return callback(null, true);
     }
     callback(new Error('Not allowed by CORS'));
@@ -72,6 +87,14 @@ app.get('/', (_req, res) => {
       'POST /api/orders',
     ]
   });
+});
+
+app.use((error: Error, _req: express.Request, res: express.Response, next: express.NextFunction) => {
+  if (error.message === 'Not allowed by CORS') {
+    res.status(403).json({ error: 'Origine non autorisée' });
+    return;
+  }
+  next(error);
 });
 
 // Start server

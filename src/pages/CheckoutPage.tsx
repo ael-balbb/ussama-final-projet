@@ -5,6 +5,7 @@ import { Send, CheckCircle, ArrowLeft } from 'lucide-react';
 import Footer from '../components/Footer';
 import type { OrderForm, CartItem } from '../types';
 import { submitOrder } from '../utils/api';
+import { getCartItemKey } from '../utils/cart';
 import './CheckoutPage.css';
 
 const moroccoCities = [
@@ -42,19 +43,29 @@ const moroccoCities = [
 
 const CheckoutPage: React.FC = () => {
   const navigate = useNavigate();
-  const [cartItems, setCartItems] = useState<CartItem[]>([]);
+  const [cartItems] = useState<CartItem[]>(() => {
+    try {
+      const savedCart = localStorage.getItem('cart');
+      const parsed = savedCart ? JSON.parse(savedCart) : [];
+      return Array.isArray(parsed)
+        ? parsed.filter((item) => item?.product?.id && Number(item.quantity) > 0)
+        : [];
+    } catch {
+      return [];
+    }
+  });
   const [formData, setFormData] = useState<OrderForm>({
     firstName: '',
     lastName: '',
     city: '',
     address: '',
     phoneNumber: '',
-    quantity: 0,
   });
 
   const [isSubmitting, setIsSubmitting] = useState(false);
   const [isSuccess, setIsSuccess] = useState(false);
   const [errors, setErrors] = useState<Partial<OrderForm>>({});
+  const [submitError, setSubmitError] = useState('');
 
   // Scroll to top when page loads
   useEffect(() => {
@@ -62,17 +73,8 @@ const CheckoutPage: React.FC = () => {
   }, []);
 
   useEffect(() => {
-    const savedCart = localStorage.getItem('cart');
-    if (savedCart) {
-      const items = JSON.parse(savedCart);
-      setCartItems(items);
-      if (items.length === 0) {
-        navigate('/');
-      }
-    } else {
-      navigate('/');
-    }
-  }, [navigate]);
+    if (cartItems.length === 0) navigate('/', { replace: true });
+  }, [cartItems.length, navigate]);
 
   const total = cartItems.reduce(
     (sum, item) => sum + item.product.price * item.quantity,
@@ -115,6 +117,7 @@ const CheckoutPage: React.FC = () => {
     }
 
     setIsSubmitting(true);
+    setSubmitError('');
 
     try {
       await submitOrder(formData, cartItems);
@@ -125,7 +128,7 @@ const CheckoutPage: React.FC = () => {
       }, 3000);
     } catch (error) {
       console.error('Error submitting order:', error);
-      alert('Une erreur est survenue. Veuillez réessayer.');
+      setSubmitError(error instanceof Error ? error.message : 'Une erreur est survenue. Veuillez réessayer.');
     } finally {
       setIsSubmitting(false);
     }
@@ -259,9 +262,10 @@ const CheckoutPage: React.FC = () => {
               <div className="order-summary-page">
                 <h2>Résumé de la Commande</h2>
                 {cartItems.map((item) => (
-                  <div key={item.product.id} className="summary-item">
+                  <div key={getCartItemKey(item)} className="summary-item">
                     <span>
-                      {item.product.name} x{item.quantity}
+                      {item.product.name}
+                      {item.selectedColor ? ` · ${item.selectedColor.name}` : ''} ×{item.quantity}
                     </span>
                     <span className="item-price">
                       {(item.product.price * item.quantity).toLocaleString()} DH
@@ -273,6 +277,8 @@ const CheckoutPage: React.FC = () => {
                   <span className="total-amount">{total.toLocaleString()} DH</span>
                 </div>
               </div>
+
+              {submitError && <p className="checkout-submit-error" role="alert">{submitError}</p>}
 
               <button
                 type="submit"

@@ -1,5 +1,6 @@
-import React, { useEffect, useState } from 'react';
+import React, { useEffect, useRef, useState } from 'react';
 import { createPortal } from 'react-dom';
+import { AnimatePresence, motion, useReducedMotion } from 'framer-motion';
 import {
   X,
   ChevronLeft,
@@ -8,18 +9,19 @@ import {
   Minus,
   ShoppingBag,
   Truck,
-  RefreshCcw,
+  Banknote,
   ImageOff,
 } from 'lucide-react';
-import type { Product } from '../types';
-import { formatPrice, getOriginalPrice } from '../utils/display';
+import type { AddToCartHandler, Product } from '../types';
+import { formatPrice, getAvailableColors, getOriginalPrice } from '../utils/display';
+import { getVariantStock } from '../utils/cart';
 import './ProductModal.css';
 
 interface ProductModalProps {
   product: Product;
   isOpen: boolean;
   onClose: () => void;
-  onAddToCart: (product: Product) => void;
+  onAddToCart: AddToCartHandler;
 }
 
 const CATEGORY_LABELS: Record<Product['category'], string> = {
@@ -33,10 +35,12 @@ const ProductModal: React.FC<ProductModalProps> = ({ product, isOpen, onClose, o
   const [quantity, setQuantity] = useState(1);
   const [openAccordion, setOpenAccordion] = useState<string | null>(null);
   const [brokenImages, setBrokenImages] = useState<Record<number, boolean>>({});
+  const reduceMotion = useReducedMotion();
+  const panelRef = useRef<HTMLDivElement>(null);
+  const closeButtonRef = useRef<HTMLButtonElement>(null);
+  const resetTimerRef = useRef<number | null>(null);
 
-  const colors = (product.colors || []).filter(
-    (c) => c?.name && c?.image && String(c.image).trim()
-  );
+  const colors = getAvailableColors(product).filter((color) => color?.name);
 
   const galleryImages = (
     product.images?.length
@@ -46,7 +50,9 @@ const ProductModal: React.FC<ProductModalProps> = ({ product, isOpen, onClose, o
         : []
   ).filter((url): url is string => Boolean(url && String(url).trim()));
 
-  const images = colors.length > 0 ? colors.map((c) => c.image) : galleryImages;
+  const images = colors.length > 0
+    ? colors.map((color) => color.image || galleryImages[0] || '')
+    : galleryImages;
   const originalPrice = getOriginalPrice(product);
 
   useEffect(() => {
@@ -86,23 +92,52 @@ const ProductModal: React.FC<ProductModalProps> = ({ product, isOpen, onClose, o
 
   useEffect(() => {
     if (!isOpen) return;
-    setCurrentImageIndex(0);
-    setSelectedColor(0);
-    setQuantity(1);
-    setOpenAccordion(null);
-    setBrokenImages({});
-  }, [isOpen, product.id]);
-
-  useEffect(() => {
-    if (!isOpen) return;
+    const previousFocus = document.activeElement as HTMLElement | null;
     const onKey = (e: KeyboardEvent) => {
       if (e.key === 'Escape') onClose();
+      if (e.key === 'Tab' && panelRef.current) {
+        const focusable = [...panelRef.current.querySelectorAll<HTMLElement>(
+          'button:not([disabled]), a[href], input:not([disabled]), select:not([disabled]), textarea:not([disabled]), [tabindex]:not([tabindex="-1"])'
+        )];
+        const first = focusable[0];
+        const last = focusable[focusable.length - 1];
+        if (e.shiftKey && document.activeElement === first) {
+          e.preventDefault();
+          last?.focus();
+        } else if (!e.shiftKey && document.activeElement === last) {
+          e.preventDefault();
+          first?.focus();
+        }
+      }
     };
     window.addEventListener('keydown', onKey);
-    return () => window.removeEventListener('keydown', onKey);
+    requestAnimationFrame(() => closeButtonRef.current?.focus());
+    return () => {
+      window.removeEventListener('keydown', onKey);
+      previousFocus?.focus();
+    };
   }, [isOpen, onClose]);
 
-  if (!isOpen || typeof document === 'undefined') return null;
+  useEffect(() => {
+    if (isOpen && resetTimerRef.current !== null) {
+      window.clearTimeout(resetTimerRef.current);
+      resetTimerRef.current = null;
+    }
+  }, [isOpen]);
+
+  if (typeof document === 'undefined') return null;
+
+  const handleClose = () => {
+    onClose();
+    resetTimerRef.current = window.setTimeout(() => {
+      setCurrentImageIndex(0);
+      setSelectedColor(0);
+      setQuantity(1);
+      setOpenAccordion(null);
+      setBrokenImages({});
+      resetTimerRef.current = null;
+    }, reduceMotion ? 0 : 240);
+  };
 
   const goToImage = (index: number) => {
     setCurrentImageIndex(index);
@@ -130,11 +165,11 @@ const ProductModal: React.FC<ProductModalProps> = ({ product, isOpen, onClose, o
   };
 
   const handleAddToCart = () => {
-    for (let i = 0; i < quantity; i += 1) {
-      onAddToCart(product);
-    }
-    onClose();
+    onAddToCart(product, colors[selectedColor], quantity);
+    handleClose();
   };
+
+  const selectedStock = getVariantStock(product.stock, colors[selectedColor]);
 
   const accordions = [
     {
@@ -154,36 +189,42 @@ const ProductModal: React.FC<ProductModalProps> = ({ product, isOpen, onClose, o
       title: 'Description',
       content: <p>{product.description || 'Aucune description disponible pour ce produit.'}</p>,
     },
-    {
-      key: 'materials',
-      title: 'Matériaux & entretien',
-      content: (
-        <p>
-          Produit 100% original, contrôlé avant expédition. Nettoyez avec un chiffon doux
-          légèrement humide. Évitez l'exposition prolongée à l'humidité et aux températures
-          extrêmes.
-        </p>
-      ),
-    },
   ];
 
   return createPortal(
-    <div className="quickview-backdrop" onClick={onClose} role="presentation">
-      <div
+    <AnimatePresence>
+      {isOpen && (
+      <motion.div
+        ref={panelRef}
+        className="quickview-backdrop"
+        onClick={handleClose}
+        role="presentation"
+        initial={{ opacity: 0 }}
+        animate={{ opacity: 1 }}
+        exit={{ opacity: 0 }}
+        transition={{ duration: reduceMotion ? 0 : 0.2 }}
+      >
+      <motion.div
         className="quickview-panel"
         role="dialog"
         aria-modal="true"
         aria-label={product.name}
         onClick={(e) => e.stopPropagation()}
+        initial={reduceMotion ? { opacity: 0 } : { opacity: 0, x: 48 }}
+        animate={{ opacity: 1, x: 0 }}
+        exit={reduceMotion ? { opacity: 0 } : { opacity: 0, x: 48 }}
+        transition={reduceMotion ? { duration: 0 } : { type: 'spring', stiffness: 420, damping: 38 }}
       >
-        <button
+        <motion.button
+          ref={closeButtonRef}
           type="button"
           className="quickview-close"
-          onClick={onClose}
+          onClick={handleClose}
           aria-label="Fermer"
+          whileTap={reduceMotion ? undefined : { scale: 0.9 }}
         >
           <X size={17} strokeWidth={1.5} />
-        </button>
+        </motion.button>
 
         <div className="quickview-gallery">
           <div className="quickview-main-image">
@@ -197,7 +238,7 @@ const ProductModal: React.FC<ProductModalProps> = ({ product, isOpen, onClose, o
                 <ChevronLeft size={18} strokeWidth={1.5} />
               </button>
             )}
-            {images.length > 0 && !currentBroken ? (
+            {images[currentImageIndex] && !currentBroken ? (
               <img
                 key={`${product.id}-${currentImageIndex}`}
                 src={images[currentImageIndex]}
@@ -233,7 +274,7 @@ const ProductModal: React.FC<ProductModalProps> = ({ product, isOpen, onClose, o
                   aria-label={`Voir l'image ${index + 1}`}
                   type="button"
                 >
-                  {!brokenImages[index] ? (
+                  {img && !brokenImages[index] ? (
                     <img src={img} alt="" onError={() => markBroken(index)} draggable={false} />
                   ) : (
                     <span className="quickview-thumb-fallback" aria-hidden="true" />
@@ -255,7 +296,7 @@ const ProductModal: React.FC<ProductModalProps> = ({ product, isOpen, onClose, o
           </div>
 
           <p className="quickview-summary">
-            {product.description || 'Produit premium de notre catalogue, garanti 100% original.'}
+            {product.description || 'Contactez la boutique pour obtenir les détails de ce produit.'}
           </p>
 
           {colors.length > 0 && (
@@ -271,7 +312,8 @@ const ProductModal: React.FC<ProductModalProps> = ({ product, isOpen, onClose, o
                     className={`quickview-swatch ${index === selectedColor ? 'selected' : ''}`}
                     style={{ backgroundColor: color.hex }}
                     onClick={() => selectColor(index)}
-                    aria-label={`Coloris ${color.name}`}
+                    aria-label={`Coloris ${color.name}, ${color.stock ?? product.stock} en stock`}
+                    aria-pressed={index === selectedColor}
                   />
                 ))}
               </div>
@@ -290,17 +332,23 @@ const ProductModal: React.FC<ProductModalProps> = ({ product, isOpen, onClose, o
               <span>{quantity}</span>
               <button
                 type="button"
-                onClick={() => setQuantity((q) => Math.min(Math.max(product.stock, 1), q + 1))}
+                onClick={() => setQuantity((q) => Math.min(Math.max(selectedStock, 1), q + 1))}
                 aria-label="Augmenter la quantité"
               >
                 <Plus size={14} strokeWidth={1.5} />
               </button>
             </div>
 
-            <button type="button" className="quickview-add-btn" onClick={handleAddToCart}>
-              Ajouter au panier
+            <motion.button
+              type="button"
+              className="quickview-add-btn"
+              onClick={handleAddToCart}
+              disabled={selectedStock <= 0}
+              whileTap={reduceMotion ? undefined : { scale: 0.98 }}
+            >
+              {selectedStock > 0 ? 'Ajouter au panier' : 'Rupture de stock'}
               <ShoppingBag size={17} strokeWidth={1.5} />
-            </button>
+            </motion.button>
           </div>
 
           <div className="quickview-reassurance">
@@ -309,8 +357,8 @@ const ProductModal: React.FC<ProductModalProps> = ({ product, isOpen, onClose, o
               Livraison rapide partout au Maroc
             </span>
             <span>
-              <RefreshCcw size={15} strokeWidth={1.5} />
-              Retours & échanges faciles
+              <Banknote size={15} strokeWidth={1.5} />
+              Paiement à la livraison
             </span>
           </div>
 
@@ -342,8 +390,10 @@ const ProductModal: React.FC<ProductModalProps> = ({ product, isOpen, onClose, o
             })}
           </div>
         </div>
-      </div>
-    </div>,
+      </motion.div>
+    </motion.div>
+      )}
+    </AnimatePresence>,
     document.body
   );
 };

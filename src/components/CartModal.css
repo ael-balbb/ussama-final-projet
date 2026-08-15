@@ -196,7 +196,7 @@
 }
 
 .cart-item-price {
-  color: var(--primary);
+  color: var(--primary-dark);
   font-weight: 700;
   margin-bottom: 8px;
   font-size: 14px;
@@ -292,7 +292,7 @@
   width: 100%;
   padding: 14px;
   background: var(--primary);
-  color: #ffffff;
+  color: #111111;
   border: none;
   border-radius: var(--radius-pill);
   font-size: 17px;
@@ -300,6 +300,12 @@
   letter-spacing: -0.374px;
   cursor: pointer;
   transition: background-color 0.2s ease, transform 0.15s ease;
+}
+
+.cart-item-color {
+  margin: -2px 0 6px;
+  color: var(--text-gray);
+  font-size: 12px;
 }
 
 @media (min-width: 768px) {

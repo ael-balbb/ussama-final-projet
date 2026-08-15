@@ -1,49 +1,39 @@
 import React, { useMemo, useState } from 'react';
 import { motion } from 'framer-motion';
 import { ArrowRight } from 'lucide-react';
-import type { Pack, Product } from '../types';
+import type { AddToCartHandler, Pack, Product } from '../types';
 import ProductModal from './ProductModal';
 import { formatPrice } from '../utils/display';
 import './MomentOffer.css';
 
 interface MomentOfferProps {
   pack?: Pack;
-  onAddToCart: (product: Product) => void;
+  onAddToCart: AddToCartHandler;
 }
-
-const FALLBACK: Product = {
-  id: 'pack-fallback-apple-gold',
-  name: 'Pack Apple Gold',
-  price: 400,
-  images: [],
-  image: '',
-  description: "Pack promo Apple Gold — offre spéciale du moment.",
-  category: 'accessory',
-  brand: 'Apple',
-  stock: 10,
-};
 
 const packToProduct = (pack: Pack): Product => ({
   id: pack.id,
+  source: 'pack',
   name: pack.name,
   price: pack.price,
+  compare_at_price: pack.compare_at_price,
+  promo_label: pack.promo_label,
   images: pack.image ? [pack.image] : [],
   image: pack.image || '',
   description: pack.description || pack.name,
   category: 'accessory',
   brand: 'Promo',
-  stock: pack.stock > 0 ? pack.stock : 10,
+  stock: pack.stock,
 });
 
 const MomentOffer: React.FC<MomentOfferProps> = ({ pack, onAddToCart }) => {
   const [isModalOpen, setIsModalOpen] = useState(false);
 
-  const product = useMemo(
-    () => (pack ? packToProduct(pack) : FALLBACK),
-    [pack]
-  );
+  const product = useMemo(() => (pack ? packToProduct(pack) : null), [pack]);
 
   const openModal = () => setIsModalOpen(true);
+
+  if (!product) return null;
 
   return (
     <section className="moment-offer" id="offres" aria-label="Offre du moment">

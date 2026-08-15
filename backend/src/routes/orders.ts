@@ -1,40 +1,65 @@
 import { Router, Request, Response } from 'express';
 import { supabase } from '../config/supabase';
 import { authMiddleware } from '../middleware/auth';
+import { cleanText } from '../utils/catalog';
 
 const router = Router();
 
 // POST /api/orders - Public: create new order
 router.post('/', async (req: Request, res: Response): Promise<void> => {
   try {
-    const { firstName, lastName, city, address, phoneNumber, cartItems, totalAmount } = req.body;
+    const firstName = cleanText(req.body.firstName, 80);
+    const lastName = cleanText(req.body.lastName, 80);
+    const city = cleanText(req.body.city, 100);
+    const address = cleanText(req.body.address, 300);
+    const phoneNumber = cleanText(req.body.phoneNumber, 20).replace(/\s/g, '');
+    const cartItems = req.body.cartItems;
 
-    if (!firstName || !lastName || !city || !address || !phoneNumber || !cartItems) {
+    if (!firstName || !lastName || !city || !address || !/^(06|07)\d{8}$/.test(phoneNumber)) {
       res.status(400).json({ error: 'Tous les champs sont requis' });
       return;
     }
 
-    const { data, error } = await supabase
-      .from('orders')
-      .insert([{
-        first_name: firstName,
-        last_name: lastName,
-        city,
-        address,
-        phone_number: phoneNumber,
-        products_json: cartItems,
-        total_amount: Number(totalAmount) || 0,
-        status: 'pending'
-      }])
-      .select()
-      .single();
+    if (!Array.isArray(cartItems) || cartItems.length < 1 || cartItems.length > 30) {
+      res.status(400).json({ error: 'Le panier est invalide' });
+      return;
+    }
 
-    if (error) throw error;
+    const requestedItems = cartItems.map((item: unknown) => {
+      const value = item && typeof item === 'object' ? item as Record<string, unknown> : {};
+      const id = cleanText(value.id, 80);
+      const source = value.source === 'pack' ? 'pack' : 'product';
+      const quantity = Math.floor(Number(value.quantity));
+      const color = cleanText(value.color, 40);
+      if (!id || !Number.isFinite(quantity) || quantity < 1 || quantity > 20) {
+        throw new Error('Un article du panier est invalide');
+      }
+      return { id, source, quantity, color };
+    });
 
-    res.status(201).json({ success: true, order: data });
+    const { data, error } = await supabase.rpc('place_order', {
+      p_first_name: firstName,
+      p_last_name: lastName,
+      p_city: city,
+      p_address: address,
+      p_phone_number: phoneNumber,
+      p_cart_items: requestedItems,
+    });
+    if (error) throw new Error(error.message);
+    const order = Array.isArray(data) ? data[0] : data;
+    if (!order?.order_id) throw new Error('La commande n’a pas pu être créée');
+
+    res.status(201).json({
+      success: true,
+      order: { id: order.order_id, total_amount: order.total_amount },
+    });
   } catch (error) {
     console.error('Error creating order:', error);
-    res.status(500).json({ error: 'Erreur lors de la création de la commande' });
+    const message = error instanceof Error ? error.message : 'Erreur lors de la création de la commande';
+    const isCustomerError = /invalide|disponible|Stock insuffisant/.test(message);
+    res.status(isCustomerError ? 400 : 500).json({
+      error: isCustomerError ? message : 'Erreur lors de la création de la commande',
+    });
   }
 });
 

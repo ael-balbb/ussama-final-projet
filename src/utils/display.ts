@@ -10,38 +10,21 @@ export const formatPrice = (price: number): string => {
   return `${price.toLocaleString('fr-MA')} DH`;
 };
 
-/** Stable hash so a given product always gets the same badge/promo. */
-const hashId = (id: string): number => {
-  let h = 0;
-  for (let i = 0; i < id.length; i += 1) {
-    h = (h * 31 + id.charCodeAt(i)) >>> 0;
-  }
-  return h;
-};
-
-const NEW_WINDOW_DAYS = 45;
-
 export const isNewProduct = (product: Product): boolean => {
-  if (!product.created_at) return false;
-  const created = new Date(product.created_at).getTime();
-  if (isNaN(created)) return false;
-  return Date.now() - created < NEW_WINDOW_DAYS * 24 * 60 * 60 * 1000;
+  return product.is_new === true;
 };
 
-const PROMO_PERCENTS = [15, 20, 28];
-
-/** ~1 product in 3 is presented as a promo, with a stable discount percent. */
 export const getPromoPercent = (product: Product): number | null => {
-  const h = hashId(product.id);
-  if (h % 3 !== 0) return null;
-  return PROMO_PERCENTS[h % PROMO_PERCENTS.length];
+  const originalPrice = getOriginalPrice(product);
+  if (!originalPrice || !product.price) return null;
+  return Math.round(((originalPrice - product.price) / originalPrice) * 100);
 };
 
-/** Crossed-out "original" price shown next to the real (current) price. */
 export const getOriginalPrice = (product: Product): number | null => {
-  const percent = getPromoPercent(product);
-  if (!percent || !product.price) return null;
-  return Math.round(product.price / (1 - percent / 100));
+  const compareAtPrice = Number(product.compare_at_price);
+  return Number.isFinite(compareAtPrice) && compareAtPrice > product.price
+    ? compareAtPrice
+    : null;
 };
 
 export interface ProductBadge {
@@ -56,12 +39,19 @@ export const getBadges = (product: Product): ProductBadge[] => {
   }
   const promo = getPromoPercent(product);
   if (promo) {
-    badges.push({ label: `PROMO -${promo}%`, variant: 'promo' });
-  } else if (hashId(product.id) % 5 === 1) {
-    badges.push({ label: 'POPULAIRE', variant: 'popular' });
+    badges.push({ label: product.promo_label?.trim() || `PROMO -${promo}%`, variant: 'promo' });
+  } else if (product.promo_label?.trim()) {
+    badges.push({ label: product.promo_label.trim(), variant: 'promo' });
+  } else if (product.is_featured) {
+    badges.push({ label: 'EN VEDETTE', variant: 'popular' });
   }
   if (product.stock > 0 && product.stock < 10) {
     badges.push({ label: 'STOCK LIMITÉ', variant: 'stock' });
   }
   return badges.slice(0, 2);
 };
+
+export const getAvailableColors = (product: Product) =>
+  (product.colors || [])
+    .filter((color) => color.available !== false && (color.stock ?? product.stock) > 0)
+    .sort((a, b) => (a.sort_order ?? 0) - (b.sort_order ?? 0));

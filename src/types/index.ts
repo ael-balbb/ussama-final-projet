@@ -2,20 +2,30 @@ export interface ProductColor {
   name: string;
   hex: string;
   image: string;
+  stock?: number;
+  available?: boolean;
+  sort_order?: number;
 }
 
 export interface Product {
   id: string;
+  source?: 'product' | 'pack';
   name: string;
   category: 'phone' | 'accessory';
   brand: string;
   price: number;
+  compare_at_price?: number | null;
+  promo_label?: string;
   image?: string;
   images: string[];
   /** Optional color variants — each with its own product photo */
   colors?: ProductColor[];
   description: string;
   stock: number;
+  is_featured?: boolean;
+  is_new?: boolean;
+  is_active?: boolean;
+  sort_order?: number;
   created_at?: string;
   updated_at?: string;
 }
@@ -24,10 +34,14 @@ export interface Pack {
   id: string;
   name: string;
   price: number;
+  compare_at_price?: number | null;
+  promo_label?: string;
   stock: number;
   image: string;
   description: string;
   color: 'dark' | 'yellow' | 'red';
+  is_active?: boolean;
+  sort_order?: number;
   created_at?: string;
   updated_at?: string;
 }
@@ -35,7 +49,14 @@ export interface Pack {
 export interface CartItem {
   product: Product;
   quantity: number;
+  selectedColor?: ProductColor;
 }
+
+export type AddToCartHandler = (
+  product: Product,
+  selectedColor?: ProductColor,
+  quantity?: number
+) => void;
 
 export interface OrderForm {
   firstName: string;
@@ -43,7 +64,6 @@ export interface OrderForm {
   city: string;
   address: string;
   phoneNumber: string;
-  quantity: number;
 }
 
 export interface Order {
@@ -61,10 +81,20 @@ export interface Order {
 }
 
 export interface CartItemJSON {
+  id?: string;
+  source?: 'product' | 'pack';
   name: string;
   price: number;
   quantity: number;
   image?: string;
+  color?: string;
+}
+
+export interface CartOrderItem {
+  id: string;
+  source: 'product' | 'pack';
+  quantity: number;
+  color?: string;
 }
 
 export interface Cart {

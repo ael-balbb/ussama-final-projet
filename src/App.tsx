@@ -10,8 +10,9 @@ import MomentOffer from './components/MomentOffer';
 import NewArrivals from './components/NewArrivals';
 import CartModal from './components/CartModal';
 import Footer from './components/Footer';
-import type { Product, CartItem, Pack } from './types';
+import type { Product, ProductColor, CartItem, Pack } from './types';
 import { fetchProducts, fetchPacks } from './utils/api';
+import { getCartItemKey, getVariantStock } from './utils/cart';
 import './App.css';
 
 // Lazy load pages that aren't needed on first render
@@ -28,10 +29,22 @@ const PageLoader = () => (
 
 function HomePage() {
   const navigate = useNavigate();
-  const [cartItems, setCartItems] = useState<CartItem[]>([]);
+  const [cartItems, setCartItems] = useState<CartItem[]>(() => {
+    try {
+      const savedCart = localStorage.getItem('cart');
+      const parsed = savedCart ? JSON.parse(savedCart) : [];
+      if (!Array.isArray(parsed)) return [];
+      return parsed
+        .filter((item) => item?.product?.id && Number(item.quantity) > 0)
+        .map((item) => ({ ...item, quantity: Math.max(1, Math.floor(Number(item.quantity))) }));
+    } catch {
+      return [];
+    }
+  });
   const [isCartOpen, setIsCartOpen] = useState(false);
   const [products, setProducts] = useState<Product[]>([]);
   const [packs, setPacks] = useState<Pack[]>([]);
+  const [catalogStatus, setCatalogStatus] = useState<'loading' | 'ready' | 'error'>('loading');
 
   // Load catalog in parallel without blocking first paint
   useEffect(() => {
@@ -59,6 +72,11 @@ function HomePage() {
           console.error('Error loading packs:', packsResult.reason);
           setPacks([]);
         }
+        setCatalogStatus(
+          productsResult.status === 'rejected' && packsResult.status === 'rejected'
+            ? 'error'
+            : 'ready'
+        );
       });
     };
 
@@ -66,18 +84,6 @@ function HomePage() {
     return () => {
       cancelled = true;
     };
-  }, []);
-
-  // Load cart from localStorage
-  useEffect(() => {
-    const savedCart = localStorage.getItem('cart');
-    if (savedCart) {
-      try {
-        setCartItems(JSON.parse(savedCart));
-      } catch {
-        setCartItems([]);
-      }
-    }
   }, []);
 
   // Save cart to localStorage
@@ -90,37 +96,49 @@ function HomePage() {
     return [...new Set(products.map((p) => p.brand).filter(Boolean))];
   }, [products]);
 
-  const addToCart = (product: Product) => {
+  const addToCart = (product: Product, selectedColor?: ProductColor, quantity = 1) => {
     setCartItems((prevItems) => {
-      const existingItem = prevItems.find((item) => item.product.id === product.id);
+      const nextItem = { product, selectedColor };
+      const itemKey = getCartItemKey(nextItem);
+      const existingItem = prevItems.find((item) => getCartItemKey(item) === itemKey);
+      const maxStock = getVariantStock(product.stock, selectedColor);
+      if (maxStock <= 0) return prevItems;
 
       if (existingItem) {
         return prevItems.map((item) =>
-          item.product.id === product.id
-            ? { ...item, quantity: item.quantity + 1 }
+          getCartItemKey(item) === itemKey
+            ? { ...item, quantity: Math.min(maxStock, item.quantity + quantity) }
             : item
         );
       }
 
-      return [...prevItems, { product, quantity: 1 }];
+      return [...prevItems, { product, selectedColor, quantity: Math.min(maxStock, quantity) }];
     });
   };
 
-  const updateQuantity = (productId: string, newQuantity: number) => {
-    if (newQuantity === 0) {
-      removeItem(productId);
+  const updateQuantity = (itemKey: string, newQuantity: number) => {
+    if (newQuantity <= 0) {
+      removeItem(itemKey);
       return;
     }
 
     setCartItems((prevItems) =>
       prevItems.map((item) =>
-        item.product.id === productId ? { ...item, quantity: newQuantity } : item
+        getCartItemKey(item) === itemKey
+          ? {
+              ...item,
+              quantity: Math.min(
+                getVariantStock(item.product.stock, item.selectedColor),
+                newQuantity
+              ),
+            }
+          : item
       )
     );
   };
 
-  const removeItem = (productId: string) => {
-    setCartItems((prevItems) => prevItems.filter((item) => item.product.id !== productId));
+  const removeItem = (itemKey: string) => {
+    setCartItems((prevItems) => prevItems.filter((item) => getCartItemKey(item) !== itemKey));
   };
 
   const handleCheckout = () => {
@@ -144,7 +162,11 @@ function HomePage() {
 
         <MomentOffer pack={packs[0]} onAddToCart={addToCart} />
 
-        <NewArrivals products={products} onAddToCart={addToCart} />
+        <NewArrivals
+          products={products}
+          status={catalogStatus}
+          onAddToCart={addToCart}
+        />
 
         <PromoBanners packs={packs.slice(1)} onAddToCart={addToCart} />
       </main>

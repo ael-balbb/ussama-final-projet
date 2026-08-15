@@ -1,32 +1,35 @@
 import React, { useState } from 'react';
 import { motion } from 'framer-motion';
 import { ArrowRight } from 'lucide-react';
-import type { Pack, Product } from '../types';
+import type { AddToCartHandler, Pack, Product } from '../types';
 import ProductModal from './ProductModal';
 import { formatPrice } from '../utils/display';
 import './PromoBanners.css';
 
 interface PromoBannersProps {
   packs: Pack[];
-  onAddToCart: (product: Product) => void;
+  onAddToCart: AddToCartHandler;
 }
 
 const packToProduct = (pack: Pack): Product => ({
   id: pack.id,
+  source: 'pack',
   name: pack.name,
   price: pack.price,
+  compare_at_price: pack.compare_at_price,
+  promo_label: pack.promo_label,
   images: pack.image ? [pack.image] : [],
   image: pack.image || '',
   description: pack.description || pack.name,
   category: 'accessory',
   brand: 'Promo',
-  stock: pack.stock > 0 ? pack.stock : 10,
+  stock: pack.stock,
 });
 
 const PromoBannerCard: React.FC<{
   pack: Pack;
   index: number;
-  onAddToCart: (product: Product) => void;
+  onAddToCart: AddToCartHandler;
 }> = ({ pack, index, onAddToCart }) => {
   const [isModalOpen, setIsModalOpen] = useState(false);
   const product = packToProduct(pack);

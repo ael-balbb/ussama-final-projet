@@ -2,10 +2,15 @@ import { Router, Request, Response } from 'express';
 import multer from 'multer';
 import { supabase } from '../config/supabase';
 import { authMiddleware } from '../middleware/auth';
-import path from 'path';
 import crypto from 'crypto';
 
 const router = Router();
+const EXTENSIONS: Record<string, string> = {
+  'image/jpeg': '.jpg',
+  'image/jpg': '.jpg',
+  'image/png': '.png',
+  'image/webp': '.webp',
+};
 
 // Configure multer for memory storage (we'll upload to Supabase Storage)
 const upload = multer({
@@ -15,7 +20,7 @@ const upload = multer({
     files: 3 // Max 3 files at once
   },
   fileFilter: (_req, file, cb) => {
-    const allowedTypes = ['image/jpeg', 'image/jpg', 'image/png', 'image/webp'];
+    const allowedTypes = Object.keys(EXTENSIONS);
     if (allowedTypes.includes(file.mimetype)) {
       cb(null, true);
     } else {
@@ -39,7 +44,7 @@ router.post('/', authMiddleware, upload.array('images', 3), async (req: Request,
     for (const file of files) {
       // Generate unique filename
       const uniqueId = crypto.randomUUID();
-      const ext = path.extname(file.originalname) || '.jpg';
+      const ext = EXTENSIONS[file.mimetype];
       const fileName = `${uniqueId}${ext}`;
       const filePath = `products/${fileName}`;
 
@@ -85,14 +90,22 @@ router.delete('/', authMiddleware, async (req: Request, res: Response): Promise<
       return;
     }
 
-    // Extract file path from URL
-    const urlParts = url.split('/product-images/');
-    if (urlParts.length < 2) {
+    let parsedUrl: URL;
+    try {
+      parsedUrl = new URL(url);
+    } catch {
       res.status(400).json({ error: 'URL invalide' });
       return;
     }
-
-    const filePath = urlParts[1];
+    const marker = '/storage/v1/object/public/product-images/';
+    const markerIndex = parsedUrl.pathname.indexOf(marker);
+    const filePath = markerIndex >= 0
+      ? decodeURIComponent(parsedUrl.pathname.slice(markerIndex + marker.length))
+      : '';
+    if (!filePath.startsWith('products/') || filePath.includes('..')) {
+      res.status(400).json({ error: 'URL invalide' });
+      return;
+    }
 
     const { error } = await supabase.storage
       .from('product-images')

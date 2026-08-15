@@ -2,7 +2,6 @@ import React from 'react';
 import {
   Truck,
   ShieldCheck,
-  RefreshCcw,
   Instagram,
   Facebook,
   MessageCircle,
@@ -12,9 +11,9 @@ import {
 import './Footer.css';
 
 const VALUE_PROPS = [
-  { icon: Truck, label: 'Livraison gratuite sur tous les produits' },
-  { icon: ShieldCheck, label: 'Garantie satisfait ou remboursé' },
-  { icon: RefreshCcw, label: 'Retours faciles sous 30 jours' },
+  { icon: Truck, label: 'Livraison partout au Maroc' },
+  { icon: ShieldCheck, label: 'Catalogue et stock actualisés' },
+  { icon: MessageCircle, label: 'Assistance directe sur WhatsApp' },
 ];
 
 const FOOTER_COLUMNS: { title: string; links: { label: string; href: string }[] }[] = [
@@ -22,41 +21,30 @@ const FOOTER_COLUMNS: { title: string; links: { label: string; href: string }[] 
     title: 'Catégories',
     links: [
       { label: 'Nouveautés', href: '#nouveautes' },
-      { label: 'Grandes marques', href: '#accueil' },
+      { label: 'Grandes marques', href: '#marques' },
       { label: 'Offres & promos', href: '#offres' },
     ],
   },
   {
     title: 'Boutique',
     links: [
-      { label: 'Téléphones', href: '#nouveautes' },
-      { label: 'Accessoires', href: '#nouveautes' },
+      { label: 'Téléphones', href: '#telephones' },
+      { label: 'Accessoires', href: '#accessoires' },
       { label: 'Packs promo', href: '#offres' },
       { label: 'Tous les produits', href: '#nouveautes' },
     ],
   },
   {
-    title: 'Entreprise',
+    title: 'Contact',
     links: [
-      { label: 'Accueil', href: '#accueil' },
-      { label: 'À propos', href: '#accueil' },
-      { label: 'Nouveautés', href: '#nouveautes' },
-      { label: 'Nous contacter', href: 'tel:0524222744' },
-    ],
-  },
-  {
-    title: 'Infos & Politiques',
-    links: [
-      { label: 'Politique de livraison', href: '#accueil' },
-      { label: 'Politique de retour', href: '#accueil' },
-      { label: 'Conditions générales', href: '#accueil' },
-      { label: 'Garantie', href: '#accueil' },
+      { label: 'Appeler la boutique', href: 'tel:0524222744' },
       { label: "Centre d'aide", href: 'https://wa.me/212660891219' },
+      { label: 'Instagram', href: 'https://www.instagram.com/nasri_phone83' },
     ],
   },
 ];
 
-const PAYMENT_METHODS = ['VISA', 'Mastercard', 'CMI', 'PayPal', 'Cash'];
+const PAYMENT_METHODS = ['Paiement à la livraison'];
 
 const Footer: React.FC = () => {
   return (
@@ -129,7 +117,14 @@ const Footer: React.FC = () => {
                   <ul>
                     {column.links.map((link) => (
                       <li key={link.label}>
-                        <a href={link.href}>{link.label}</a>
+                        <a
+                          href={link.href}
+                          {...(link.href.startsWith('http')
+                            ? { target: '_blank', rel: 'noopener noreferrer' }
+                            : {})}
+                        >
+                          {link.label}
+                        </a>
                       </li>
                     ))}
                   </ul>
@@ -144,7 +139,7 @@ const Footer: React.FC = () => {
 
           <div className="footer-bottom">
             <p>&copy; {new Date().getFullYear()} Nasri Phone. Tous droits réservés.</p>
-            <div className="footer-payments" aria-label="Moyens de paiement acceptés">
+            <div className="footer-payments" aria-label="Mode de paiement">
               {PAYMENT_METHODS.map((method) => (
                 <span key={method} className="footer-payment-chip">
                   {method}

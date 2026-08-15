@@ -28,7 +28,7 @@ export const authMiddleware = (req: AuthRequest, res: Response, next: NextFuncti
     req.adminEmail = decoded.email;
     
     next();
-  } catch (error) {
+  } catch {
     res.status(401).json({ error: 'Token invalide ou expiré' });
     return;
   }

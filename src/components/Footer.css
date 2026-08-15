@@ -161,10 +161,8 @@
   line-height: 1;
   text-align: center;
   margin: 48px 0 24px;
-  background: linear-gradient(180deg, rgba(255, 255, 255, 0.14), rgba(255, 255, 255, 0.02));
-  -webkit-background-clip: text;
-  background-clip: text;
-  color: transparent;
+  background: transparent;
+  color: rgba(255, 255, 255, 0.1);
   user-select: none;
   white-space: nowrap;
 }

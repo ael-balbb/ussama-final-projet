@@ -7,9 +7,11 @@ dotenv.config();
 async function seed() {
   console.log('🌱 Seeding database...');
 
-  // Create default admin
-  const defaultEmail = 'admin@nasriphone.com';
-  const defaultPassword = 'NasriAdmin2025!';
+  const defaultEmail = process.env.ADMIN_EMAIL?.trim().toLowerCase();
+  const defaultPassword = process.env.ADMIN_PASSWORD;
+  if (!defaultEmail || !defaultPassword || defaultPassword.length < 12) {
+    throw new Error('ADMIN_EMAIL and a 12+ character ADMIN_PASSWORD are required');
+  }
   const passwordHash = await bcrypt.hash(defaultPassword, 10);
 
   const { error: adminError } = await supabase
@@ -22,7 +24,7 @@ async function seed() {
   if (adminError) {
     console.error('❌ Error seeding admin:', adminError);
   } else {
-    console.log(`✅ Admin created: ${defaultEmail} / ${defaultPassword}`);
+    console.log(`✅ Admin created: ${defaultEmail}`);
   }
 
   console.log('🌱 Seeding complete!');

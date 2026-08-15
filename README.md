@@ -1,192 +1,66 @@
-# Nasri Phone Store 📱
+# NasriPhone
 
-Un site e-commerce moderne pour la vente de téléphones et accessoires au Maroc, construit avec React, TypeScript, et des animations Framer Motion.
+Responsive technology storefront for Nasri Phone, built with React, TypeScript, Vite, Express, Railway, and Supabase.
 
-## 🎨 Caractéristiques
+## Architecture
 
-- **Design Moderne**: Interface utilisateur élégante avec thème clair/sombre
-- **Mode Sombre/Clair**: Basculez entre les thèmes avec transition fluide
-- **Recherche et Filtres**: Trouvez facilement des produits par nom et catégorie
-- **Panier d'Achat**: Gestion complète du panier avec quantités modifiables
-- **Formulaire de Commande**: Validation pour les utilisateurs marocains (villes et numéros de téléphone)
-- **Intégration Google Sheets**: Sauvegarde automatique des commandes sans backend
-- **Responsive**: Optimisé pour mobile, tablette et desktop
+- `src/`: Vercel-hosted storefront and protected admin interface.
+- `backend/`: Railway-hosted Express API. It is the only application layer allowed to use the Supabase service role.
+- `supabase/migrations/`: versioned database and security migrations.
+- Supabase: products, promo packs, orders, administrators, and public product images.
 
-## 🚀 Installation et Lancement
+The browser never writes directly to Supabase. Public catalogue reads, admin operations, uploads, and order creation all pass through the Railway API. Order prices are recalculated from current database records on the server.
 
+## Local development
 
 ```bash
-# Installer les dépendances
 npm install
-
-# Lancer le serveur de développement
 npm run dev
+```
 
-# Build pour la production
+Create a root `.env.local`:
+
+```dotenv
+VITE_API_URL=https://your-railway-api.example
+```
+
+Vite proxies `/api` to that URL in development, so LAN and device previews use the same-origin local server without weakening production CORS.
+
+Backend setup:
+
+```bash
+cd backend
+npm install
+npm run dev
+```
+
+Copy `backend/.env.example` to `backend/.env` and provide real values locally or through Railway. Never expose `SUPABASE_SERVICE_KEY`, `JWT_SECRET`, or admin credentials in Vite variables.
+
+## Verification
+
+```bash
+npm run lint
+npm run build
+cd backend
 npm run build
 ```
 
-## 📊 Configuration Google Sheets
+## Catalogue administration
 
-Pour recevoir les commandes dans Google Sheets, suivez ces étapes:
+The `/admin` interface manages:
 
-### Étape 1: Créer une Google Sheet
+- product and pack prices, compare-at prices, and promotion labels;
+- images and product color variants;
+- stock and availability per product and per color;
+- featured/new/active storefront status and display order;
+- order status and order history.
 
-1. Créez une nouvelle Google Sheet
-2. Ajoutez les en-têtes suivants dans la première ligne:
-   - Date
-   - Prénom
-   - Nom
-   - Ville
-   - Téléphone
-   - Produits
-   - Total (DH)
+Inactive records remain visible to authenticated administrators but are excluded from the public API.
 
-### Étape 2: Créer un Google Apps Script
+## Database security
 
-1. Dans votre Google Sheet, allez à **Extensions** → **Apps Script**
-2. Supprimez le code existant et collez le suivant:
+Apply the checked-in migrations through Supabase before deploying matching server code. Public tables have RLS enabled and no anonymous/authenticated table privileges; Railway uses the service role. The `product-images` bucket is publicly readable, while upload and deletion are restricted to the authenticated backend.
 
-```javascript
-function doPost(e) {
-  try {
-    const sheet = SpreadsheetApp.getActiveSpreadsheet().getActiveSheet();
-    const data = JSON.parse(e.postData.contents);
-    
-    sheet.appendRow([
-      data.orderDate,
-      data.firstName,
-      data.lastName,
-      data.city,
-      data.phoneNumber,
-      data.orderDetails,
-      data.totalAmount
-    ]);
-    
-    return ContentService.createTextOutput(JSON.stringify({
-      'result': 'success'
-    })).setMimeType(ContentService.MimeType.JSON);
-    
-  } catch (error) {
-    return ContentService.createTextOutput(JSON.stringify({
-      'result': 'error',
-      'error': error.toString()
-    })).setMimeType(ContentService.MimeType.JSON);
-  }
-}
-```
+## Deployment safety
 
-3. Cliquez sur **Déployer** → **Nouveau déploiement**
-4. Sélectionnez **Application Web**
-5. Configuration:
-   - Description: "Nasri Phone Orders"
-   - Exécuter en tant que: **Moi**
-   - Qui a accès: **Tout le monde**
-6. Cliquez sur **Déployer** et copiez l'URL web
-
-### Étape 3: Configurer l'Application
-
-1. Ouvrez le fichier `src/utils/googleSheets.ts`
-2. Remplacez `YOUR_GOOGLE_SCRIPT_URL_HERE` par l'URL que vous avez copiée
-3. Sauvegardez le fichier et redémarrez le serveur de développement
-
-## 📁 Structure du Projet
-
-```
-nasri-phone-store/
-├── src/
-│   ├── components/          # Composants React
-│   │   ├── Header.tsx
-│   │   ├── SearchFilter.tsx
-│   │   ├── ProductCard.tsx
-│   │   ├── CartModal.tsx
-│   │   └── CheckoutModal.tsx
-│   ├── data/
-│   │   └── products.ts      # Catalogue de produits
-│   ├── types/
-│   │   └── index.ts         # Types TypeScript
-│   ├── utils/
-│   │   └── googleSheets.ts  # Intégration Google Sheets
-│   ├── App.tsx              # Composant principal
-│   └── index.css            # Styles globaux
-├── public/
-│   └── logo.png             # Logo de l'entreprise
-└── README.md
-```
-
-## 🛠️ Technologies Utilisées
-
-- **React 18**: Framework UI
-- **TypeScript**: Typage statique
-- **Vite**: Build tool rapide
-- **Framer Motion**: Animations fluides
-- **Lucide React**: Icônes modernes
-- **Google Sheets API**: Stockage des commandes
-
-## 📝 Personnalisation
-
-### Ajouter des Produits
-
-Modifiez le fichier `src/data/products.ts` pour ajouter vos propres produits:
-
-```typescript
-{
-  id: 'unique-id',
-  name: 'Nom du produit',
-  category: 'phone' ou 'accessory',
-  brand: 'Marque',
-  price: 9999, // Prix en DH
-  image: 'URL de l\'image',
-  description: 'Description',
-  stock: 50,
-}
-```
-
-### Modifier les Villes
-
-Ajoutez ou supprimez des villes dans `src/components/CheckoutModal.tsx`.
-
-## 🎨 Couleurs du Thème
-
-- Jaune: `#FFD700`
-- Noir: `#000000`
-- Blanc: `#FFFFFF`
-
-Modifiez ces valeurs dans `src/index.css` pour changer le thème.
-
-## 📱 Validation des Numéros
-
-Les numéros de téléphone doivent:
-- Commencer par 06 ou 07
-- Contenir exactement 10 chiffres
-- Exemple: `0612345678`
-
-## 🚀 Déploiement
-
-Pour déployer votre site:
-
-1. **Vercel** (Recommandé):
-   ```bash
-   npm install -g vercel
-   vercel
-   ```
-
-2. **Netlify**:
-   ```bash
-   npm run build
-   # Glissez-déposez le dossier 'dist' sur Netlify
-   ```
-
-## 📞 Support
-
-Pour toute question ou assistance:
-- Email: nasriphone83@gmail.com
-- Téléphone: 06XXXXXXXX
-
-## 📄 Licence
-
-© 2026 Nasri Phone - Tous droits réservés
-
----
-
-**Développé avec ❤️ pour le marché marocain**
+`master` is the live Vercel branch. Use a feature branch and pull request for storefront or API changes, review the Vercel preview, deploy the Railway API with its matching migration, and merge only after verification.

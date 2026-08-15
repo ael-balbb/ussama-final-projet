@@ -1,13 +1,14 @@
 import React, { useState } from 'react';
+import { motion, useReducedMotion } from 'framer-motion';
 import { ShoppingBag } from 'lucide-react';
-import type { Product } from '../types';
+import type { AddToCartHandler, Product } from '../types';
 import ProductModal from './ProductModal';
-import { formatPrice, getBadges, getOriginalPrice } from '../utils/display';
+import { formatPrice, getAvailableColors, getBadges, getOriginalPrice } from '../utils/display';
 import './ProductCard.css';
 
 interface ProductCardProps {
   product: Product;
-  onAddToCart: (product: Product) => void;
+  onAddToCart: AddToCartHandler;
 }
 
 const CATEGORY_LABELS: Record<Product['category'], string> = {
@@ -17,16 +18,29 @@ const CATEGORY_LABELS: Record<Product['category'], string> = {
 
 const ProductCard: React.FC<ProductCardProps> = ({ product, onAddToCart }) => {
   const [isModalOpen, setIsModalOpen] = useState(false);
+  const reduceMotion = useReducedMotion();
 
   const badges = getBadges(product);
   const originalPrice = getOriginalPrice(product);
   const image = product.images?.[0] || product.image || '';
+  const availableColors = getAvailableColors(product);
+  const openProduct = () => setIsModalOpen(true);
 
   return (
     <>
-      <article
+      <motion.article
         className="product-card"
-        onClick={() => setIsModalOpen(true)}
+        onClick={openProduct}
+        onKeyDown={(event) => {
+          if (event.key === 'Enter' || event.key === ' ') {
+            event.preventDefault();
+            openProduct();
+          }
+        }}
+        role="button"
+        tabIndex={0}
+        aria-label={`Voir ${product.name}`}
+        whileTap={reduceMotion ? undefined : { scale: 0.99 }}
       >
         <div className="product-card-media">
           {badges.length > 0 && (
@@ -63,6 +77,19 @@ const ProductCard: React.FC<ProductCardProps> = ({ product, onAddToCart }) => {
                 <span className="product-card-price-original">{formatPrice(originalPrice)}</span>
               )}
             </div>
+            <div className="product-card-meta">
+              {availableColors.length > 0 && (
+                <span className="product-card-swatches" aria-label={`${availableColors.length} coloris disponibles`}>
+                  {availableColors.slice(0, 4).map((color) => (
+                    <span key={color.name} style={{ backgroundColor: color.hex }} title={color.name} />
+                  ))}
+                  {availableColors.length > 4 && <small>+{availableColors.length - 4}</small>}
+                </span>
+              )}
+              <span className={`product-card-stock ${product.stock > 0 ? '' : 'out'}`}>
+                {product.stock > 0 ? 'En stock' : 'Épuisé'}
+              </span>
+            </div>
           </div>
 
           <button
@@ -71,22 +98,21 @@ const ProductCard: React.FC<ProductCardProps> = ({ product, onAddToCart }) => {
             aria-label={`Ajouter ${product.name} au panier`}
             onClick={(e) => {
               e.stopPropagation();
-              onAddToCart(product);
+              onAddToCart(product, availableColors[0]);
             }}
+            disabled={product.stock <= 0 || (product.colors?.length ? availableColors.length === 0 : false)}
           >
             <ShoppingBag size={17} strokeWidth={1.5} />
           </button>
         </div>
-      </article>
+      </motion.article>
 
-      {isModalOpen && (
-        <ProductModal
-          product={product}
-          isOpen={isModalOpen}
-          onClose={() => setIsModalOpen(false)}
-          onAddToCart={onAddToCart}
-        />
-      )}
+      <ProductModal
+        product={product}
+        isOpen={isModalOpen}
+        onClose={() => setIsModalOpen(false)}
+        onAddToCart={onAddToCart}
+      />
     </>
   );
 };
