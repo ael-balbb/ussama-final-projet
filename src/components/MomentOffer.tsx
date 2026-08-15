@@ -11,20 +11,26 @@ interface MomentOfferProps {
   onAddToCart: AddToCartHandler;
 }
 
-const packToProduct = (pack: Pack): Product => ({
-  id: pack.id,
-  source: 'pack',
-  name: pack.name,
-  price: pack.price,
-  compare_at_price: pack.compare_at_price,
-  promo_label: pack.promo_label,
-  images: pack.image ? [pack.image] : [],
-  image: pack.image || '',
-  description: pack.description || pack.name,
-  category: 'accessory',
-  brand: 'Promo',
-  stock: pack.stock,
-});
+const packToProduct = (pack: Pack): Product => {
+  const presentationImage = pack.name.trim().toLowerCase() === 'pack apple gold'
+    ? '/pack-apple-gold.png'
+    : pack.image;
+
+  return {
+    id: pack.id,
+    source: 'pack',
+    name: pack.name,
+    price: pack.price,
+    compare_at_price: pack.compare_at_price,
+    promo_label: pack.promo_label,
+    images: presentationImage ? [presentationImage] : [],
+    image: presentationImage || '',
+    description: pack.description || pack.name,
+    category: 'accessory',
+    brand: 'Promo',
+    stock: pack.stock,
+  };
+};
 
 const MomentOffer: React.FC<MomentOfferProps> = ({ pack, onAddToCart }) => {
   const [isModalOpen, setIsModalOpen] = useState(false);

@@ -1,4 +1,4 @@
-import { lazy, startTransition, Suspense, useEffect, useMemo, useState } from 'react';
+import { lazy, startTransition, Suspense, useEffect, useState } from 'react';
 import { Route, Routes, useNavigate } from 'react-router-dom';
 import Header from './components/Header';
 import Hero from './components/Hero';
@@ -59,10 +59,6 @@ function HomePage({
 }: StorefrontProps) {
   const navigate = useNavigate();
   const [isCartOpen, setIsCartOpen] = useState(false);
-  const brands = useMemo(
-    () => [...new Set(products.map((product) => product.brand).filter(Boolean))],
-    [products]
-  );
   const totalItems = cartItems.reduce((sum, item) => sum + item.quantity, 0);
 
   return (
@@ -70,7 +66,7 @@ function HomePage({
       <Header cartItemsCount={totalItems} onCartClick={() => setIsCartOpen(true)} />
       <main>
         <Hero />
-        <BrandMarquee brands={brands} />
+        <BrandMarquee />
         <ImmersiveBanner />
         <MomentOffer pack={packs[0]} onAddToCart={addToCart} />
         <NewArrivals

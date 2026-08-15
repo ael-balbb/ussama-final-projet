@@ -2,7 +2,7 @@
   position: fixed;
   inset: 0;
   z-index: 10000;
-  padding: 58px;
+  padding: 58px 58px 36px;
   display: flex;
   align-items: flex-end;
   justify-content: center;
@@ -13,14 +13,16 @@
 
 .quickview-panel {
   position: relative;
-  width: min(1418px, 100%);
+  width: calc(100vw - 116px);
+  max-width: none;
   min-height: 435px;
   max-height: calc(100dvh - 80px);
   padding: 34px 34px 28px;
   display: grid;
-  grid-template-columns: minmax(420px, 1fr) minmax(390px, 0.95fr) minmax(270px, 0.7fr);
+  grid-template-columns: minmax(340px, 1.15fr) minmax(310px, 0.95fr) minmax(250px, 300px);
   gap: 28px;
-  overflow: auto;
+  overflow-x: hidden;
+  overflow-y: auto;
   border: 1px solid #d8d8dc;
   border-radius: 14px;
   background: #fff;
@@ -46,12 +48,17 @@
 
 .quickview-close:hover { background: #f2f2f4; }
 .quickview-close:active { transform: scale(0.9); }
+.quickview-close:focus-visible { outline: 1px solid #111; outline-offset: 2px; }
 
 .quickview-gallery {
   min-width: 0;
   display: grid;
   grid-template-columns: 72px 1fr;
   gap: 16px;
+}
+
+.quickview-gallery:not(:has(.quickview-thumbnails)) {
+  grid-template-columns: minmax(0, 1fr);
 }
 
 .quickview-thumbnails {
@@ -89,6 +96,10 @@
 }
 
 .quickview-main-image img { width: 100%; height: 100%; object-fit: contain; }
+
+.quickview-product-accessory .quickview-main-image img {
+  transform: scale(1.45);
+}
 
 .quickview-image-fallback {
   display: flex;
@@ -144,13 +155,13 @@
 .quickview-add-btn,
 .quickview-favorite {
   min-height: 46px;
-  padding: 0 17px;
+  padding: 0 8px;
   display: inline-flex;
   align-items: center;
   justify-content: center;
-  gap: 10px;
+  gap: 8px;
   border-radius: 8px;
-  font-size: 14px;
+  font-size: 13px;
   font-weight: 650;
   transition: transform 100ms ease, background-color 160ms ease, border-color 160ms ease;
 }
@@ -189,7 +200,7 @@
 
 @media (max-width: 1100px) {
   .quickview-backdrop { padding: 28px; }
-  .quickview-panel { grid-template-columns: minmax(360px, 1fr) minmax(330px, 0.9fr); }
+  .quickview-panel { width: calc(100vw - 56px); grid-template-columns: minmax(360px, 1fr) minmax(330px, 0.9fr); }
   .quickview-benefits { grid-column: 1 / -1; width: 100%; display: grid; grid-template-columns: repeat(4, 1fr); }
   .quickview-benefits > span { border-right: 1px solid #e7e7e9; border-bottom: 0; }
   .quickview-benefits > span:last-child { border-right: 0; }
@@ -200,7 +211,7 @@
   .quickview-panel {
     width: 100%;
     min-height: 0;
-    max-height: 92dvh;
+    max-height: calc(100dvh - 18px);
     padding: 44px 16px calc(20px + env(safe-area-inset-bottom, 0px));
     display: flex;
     flex-direction: column;
@@ -210,7 +221,8 @@
   .quickview-gallery { grid-template-columns: 1fr; }
   .quickview-thumbnails { order: 2; flex-direction: row; overflow-x: auto; }
   .quickview-thumbnail { flex: 0 0 58px; width: 58px; height: 50px; }
-  .quickview-main-image { height: 280px; }
+  .quickview-main-image { height: 250px; }
+  .quickview-product-accessory .quickview-main-image img { transform: scale(1.25); }
   .quickview-title { font-size: 27px; }
   .quickview-details { width: 100%; }
   .quickview-actions { grid-template-columns: 1fr; }

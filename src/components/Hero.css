@@ -1,12 +1,12 @@
 .hero {
   position: relative;
   width: 100%;
-  height: clamp(300px, 20vw, 320px);
+  height: 300px;
   min-height: 300px;
   display: flex;
   align-items: center;
   overflow: hidden;
-  background: #090909 url('/store-background.jpg') center 56% / cover no-repeat;
+  background: #090909 url('/hero-canvas-reference.png') center / cover no-repeat;
 }
 
 .hero-bg {
@@ -16,7 +16,7 @@
   width: 100%;
   height: 100%;
   object-fit: cover;
-  object-position: center 56%;
+  object-position: center;
   opacity: 0;
   transform: translateZ(0);
   transition: opacity 300ms ease;
@@ -105,24 +105,25 @@
 
 @media (max-width: 640px) {
   .hero {
-    height: min(560px, calc(100svh - var(--header-h)));
-    min-height: 500px;
-    align-items: flex-start;
+    height: 246px;
+    min-height: 246px;
+    align-items: center;
   }
 
-  .hero-bg { object-position: 58% center; }
+  .hero-bg { object-position: 100% center; }
 
   .hero-overlay {
     background: linear-gradient(90deg, rgba(0, 0, 0, 0.88) 0%, rgba(0, 0, 0, 0.6) 52%, rgba(0, 0, 0, 0.16) 100%);
   }
 
-  .hero-content-wrap { padding: 44px var(--page-gutter) 28px; }
-  .hero-content { max-width: 350px; }
-  .hero-title { margin-bottom: 18px; font-size: clamp(40px, 11.5vw, 52px); line-height: 1.03; }
-  .hero-subtitle { max-width: 335px; margin-bottom: 24px; font-size: 17px; line-height: 1.48; }
-  .hero-actions { width: min(100%, 285px); flex-direction: column; align-items: stretch; gap: 10px; }
+  .hero-content-wrap { padding: 16px var(--page-gutter); }
+  .hero-content { max-width: 218px; }
+  .hero-title { margin-bottom: 10px; font-size: 28px; line-height: 1.02; letter-spacing: -0.04em; }
+  .hero-subtitle { max-width: 215px; margin-bottom: 12px; font-size: 10.5px; line-height: 1.45; }
+  .hero-actions { width: 146px; flex-direction: column; align-items: stretch; gap: 6px; }
   .hero-cta,
-  .hero-cta-ghost { min-height: 51px; padding: 0 20px; font-size: 16px; }
+  .hero-cta-ghost { min-height: 27px; padding: 0 10px; gap: 6px; border-radius: 6px; font-size: 9px; }
+  .hero-cta svg { width: 13px; height: 13px; }
 }
 
 @media (prefers-reduced-transparency: reduce) {

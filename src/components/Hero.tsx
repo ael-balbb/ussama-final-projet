@@ -1,4 +1,4 @@
-import React, { useEffect, useRef, useState } from 'react';
+import React from 'react';
 import { motion, useReducedMotion } from 'framer-motion';
 import { ArrowRight } from 'lucide-react';
 import { Link } from 'react-router-dom';
@@ -7,57 +7,18 @@ import './Hero.css';
 const MotionLink = motion.create(Link);
 
 const Hero: React.FC = () => {
-  const videoRef = useRef<HTMLVideoElement>(null);
-  const [ready, setReady] = useState(false);
   const reduceMotion = useReducedMotion();
-
-  useEffect(() => {
-    const video = videoRef.current;
-    if (!video) return;
-
-    const markReady = () => setReady(true);
-    video.addEventListener('loadeddata', markReady);
-    video.addEventListener('canplay', markReady);
-
-    const io = new IntersectionObserver(
-      ([entry]) => {
-        if (!entry) return;
-        if (entry.isIntersecting) {
-          // Start loading only when hero is visible
-          if (video.networkState === video.NETWORK_EMPTY) {
-            video.load();
-          }
-          video.play().catch(() => {});
-        } else {
-          video.pause();
-        }
-      },
-      { rootMargin: '80px', threshold: 0.05 }
-    );
-
-    io.observe(video);
-
-    return () => {
-      io.disconnect();
-      video.removeEventListener('loadeddata', markReady);
-      video.removeEventListener('canplay', markReady);
-    };
-  }, []);
 
   return (
     <section className="hero" id="accueil">
-      <video
-        ref={videoRef}
-        className={`hero-bg ${ready ? 'is-ready' : ''}`}
-        muted
-        loop
-        playsInline
-        preload="metadata"
-        poster="/store-background.jpg"
+      <img
+        className="hero-bg is-ready"
+        src="/hero-canvas-reference.png"
+        alt=""
+        fetchPriority="high"
+        decoding="async"
         aria-hidden="true"
-      >
-        <source src="/hero-background.mp4?v=okkey1" type="video/mp4" />
-      </video>
+      />
       <div className="hero-overlay" aria-hidden="true" />
 
       <div className="hero-content-wrap">

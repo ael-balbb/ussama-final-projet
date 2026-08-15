@@ -7,7 +7,7 @@ import type { Product } from '../types';
 
 export const formatPrice = (price: number): string => {
   if (!price || isNaN(price)) return '0 DH';
-  return `${price.toLocaleString('fr-MA')} DH`;
+  return `${Math.round(price).toString().replace(/\B(?=(\d{3})+(?!\d))/g, ' ')} DH`;
 };
 
 export const isNewProduct = (product: Product): boolean => {
@@ -51,7 +51,45 @@ export const getBadges = (product: Product): ProductBadge[] => {
   return badges.slice(0, 2);
 };
 
-export const getAvailableColors = (product: Product) =>
-  (product.colors || [])
+const REFERENCE_COLOR_FALLBACKS: Record<string, Array<{ name: string; hex: string }>> = {
+  'iphone 13 pro': [
+    { name: 'Bleu alpin', hex: '#a8c6e0' },
+    { name: 'Graphite', hex: '#4a4a4a' },
+    { name: 'Argent', hex: '#ededed' },
+    { name: 'Vert alpin', hex: '#6d786b' },
+  ],
+  'iphone 13 pro max': [
+    { name: 'Graphite', hex: '#4a4a4a' },
+    { name: 'Bleu alpin', hex: '#a8c6e0' },
+    { name: 'Or', hex: '#d4b483' },
+    { name: 'Argent', hex: '#ededed' },
+  ],
+  'iphone 15 normal': [
+    { name: 'Rose', hex: '#efb3ba' },
+    { name: 'Vert', hex: '#c6e98b' },
+    { name: 'Bleu', hex: '#a8cbe1' },
+    { name: 'Noir', hex: '#292c32' },
+  ],
+  'samsung s23 ultra': [
+    { name: 'Noir', hex: '#303332' },
+    { name: 'Vert', hex: '#6c776c' },
+    { name: 'Crème', hex: '#f0e5d2' },
+  ],
+};
+
+export const getAvailableColors = (product: Product) => {
+  const configuredColors = (product.colors || [])
     .filter((color) => color.available !== false && (color.stock ?? product.stock) > 0)
     .sort((a, b) => (a.sort_order ?? 0) - (b.sort_order ?? 0));
+
+  if (configuredColors.length > 0) return configuredColors;
+
+  const referenceColors = REFERENCE_COLOR_FALLBACKS[product.name.trim().toLowerCase()] || [];
+  return referenceColors.map((color, index) => ({
+    ...color,
+    image: product.images?.[0] || product.image || '',
+    stock: product.stock,
+    available: product.stock > 0,
+    sort_order: index,
+  }));
+};

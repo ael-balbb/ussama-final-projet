@@ -1,12 +1,13 @@
-import { Banknote, Facebook, Instagram, MessageCircle, Phone, RefreshCw, ShieldCheck, Truck } from 'lucide-react';
+import { Banknote, Mail, MapPin, MessageCircle, Phone, RefreshCw, ShieldCheck, Truck } from 'lucide-react';
+import { FaFacebookF, FaInstagram, FaTiktok, FaYoutube } from 'react-icons/fa6';
 import { Link } from 'react-router-dom';
 import './Footer.css';
 
 const VALUE_PROPS = [
-  { icon: Truck, title: 'Livraison partout au Maroc', detail: 'Service national' },
-  { icon: ShieldCheck, title: 'Catalogue actualisé', detail: 'Prix et stock synchronisés' },
-  { icon: Banknote, title: 'Paiement à la livraison', detail: 'Réglez à la réception' },
-  { icon: RefreshCw, title: 'Assistance directe', detail: 'Conseil sur WhatsApp' },
+  { icon: Truck, title: 'Livraison partout au Maroc', detail: 'Rapide et sécurisée' },
+  { icon: ShieldCheck, title: 'Produits 100% originaux', detail: 'Garantie constructeur' },
+  { icon: Banknote, title: 'Paiement à la livraison', detail: 'Payez en toute confiance' },
+  { icon: RefreshCw, title: 'Retour facile 7 jours', detail: 'Satisfait ou remboursé' },
 ];
 
 export default function Footer({ compact = false }: { compact?: boolean }) {
@@ -27,10 +28,10 @@ export default function Footer({ compact = false }: { compact?: boolean }) {
         <div className="footer-inner">
           <div className="footer-brand">
             <Link to="/" className="footer-logo"><strong>Nasri</strong><span>Phone</span></Link>
-            <p>Votre boutique de smartphones, accessoires et objets connectés à Ben Guerir.</p>
+            <p>Votre boutique spécialisée en smartphones, accessoires et objets connectés au Maroc.</p>
           </div>
 
-          <nav className="footer-column" aria-label="Navigation secondaire">
+          <nav className="footer-column footer-nav-column" aria-label="Navigation secondaire">
             <h2>Navigation</h2>
             <Link to="/">Accueil</Link>
             <Link to="/catalog?category=phone">Téléphones</Link>
@@ -38,33 +39,34 @@ export default function Footer({ compact = false }: { compact?: boolean }) {
             <Link to="/catalog">Nouveautés</Link>
           </nav>
 
-          <div className="footer-column">
+          <div className="footer-column footer-help-column">
             <h2>Aide &amp; Support</h2>
-            <a href="tel:0524222744">Appeler la boutique</a>
-            <a href="https://wa.me/212660891219" target="_blank" rel="noopener noreferrer">Conseil produit</a>
-            <span>Paiement à la livraison</span>
-            <span>Ben Guerir, Maroc</span>
+            <span>Livraison &amp; paiements</span>
+            <span>Retours &amp; remboursements</span>
+            <span>Questions fréquentes</span>
+            <a href="https://wa.me/212660891219" target="_blank" rel="noopener noreferrer">Nous contacter</a>
           </div>
 
           <div className="footer-column footer-contact-column">
             <h2>Contactez-nous</h2>
             <a href="tel:0524222744"><Phone size={14} />05 24 22 27 44</a>
-            <a href="https://wa.me/212660891219" target="_blank" rel="noopener noreferrer"><MessageCircle size={14} />06 60 89 12 19</a>
-            <span>المركب التجاري قرب الملعب البلدي ابن جرير</span>
+            <a href="mailto:contact@nasriphone.ma"><Mail size={14} />contact@nasriphone.ma</a>
+            <span><MapPin size={14} />Ben Guerir, Maroc</span>
           </div>
 
           <div className="footer-column footer-follow">
             <h2>Suivez-nous</h2>
             <div>
-              <a href="https://www.facebook.com/nasriphone" target="_blank" rel="noopener noreferrer" aria-label="Facebook"><Facebook size={18} /></a>
-              <a href="https://www.instagram.com/nasri_phone83" target="_blank" rel="noopener noreferrer" aria-label="Instagram"><Instagram size={18} /></a>
-              <a href="https://wa.me/212660891219" target="_blank" rel="noopener noreferrer" aria-label="WhatsApp"><MessageCircle size={18} /></a>
+              <a href="https://www.facebook.com/nasriphone" target="_blank" rel="noopener noreferrer" aria-label="Facebook"><FaFacebookF /></a>
+              <a href="https://www.instagram.com/nasri_phone83" target="_blank" rel="noopener noreferrer" aria-label="Instagram"><FaInstagram /></a>
+              <a href="https://www.tiktok.com/@nasriphone" target="_blank" rel="noopener noreferrer" aria-label="TikTok"><FaTiktok /></a>
+              <a href="https://www.youtube.com/@nasriphone" target="_blank" rel="noopener noreferrer" aria-label="YouTube"><FaYoutube /></a>
             </div>
           </div>
 
           <div className="footer-bottom">
             <p>© {new Date().getFullYear()} NasriPhone. Tous droits réservés.</p>
-            <span>Paiement à la livraison</span>
+            <span className="footer-legal-links"><span>Mentions légales</span><i /> <span>Conditions générales</span><i /> <span>Politique de confidentialité</span></span>
           </div>
         </div>
 

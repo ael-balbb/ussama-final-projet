@@ -1,173 +1,175 @@
 .brand-marquee {
-  position: relative;
   width: 100%;
-  max-width: 100%;
-  background: #000000;
-  min-height: 46px;
-  padding: 11px 0;
+  height: 46px;
   overflow: hidden;
-  white-space: nowrap;
-  border-bottom: none;
+  border-bottom: 1px solid #181818;
+  background: #000;
+  color: #fff;
 }
 
-.brand-marquee-bg {
-  position: absolute;
-  inset: 0;
-  z-index: 0;
-  pointer-events: none;
-  display: none;
-}
-
-.brand-marquee-orb {
-  position: absolute;
-  border-radius: 50%;
-  filter: blur(36px);
-  opacity: 0.45;
-}
-
-.orb-gold {
-  width: 140px;
-  height: 50px;
-  top: -40%;
-  left: 10%;
-  background: rgba(233, 193, 83, 0.3);
-  animation: orb-drift-a 10s ease-in-out infinite;
-  will-change: transform;
-}
-
-.orb-blue {
-  width: 160px;
-  height: 50px;
-  bottom: -45%;
-  right: 14%;
-  background: rgba(233, 193, 83, 0.24);
-  animation: orb-drift-b 14s ease-in-out infinite;
-  will-change: transform;
-}
-
-.orb-soft {
-  width: 100px;
-  height: 40px;
-  top: 20%;
-  left: 55%;
-  background: rgba(255, 255, 255, 0.06);
-  animation: orb-drift-a 12s ease-in-out infinite reverse;
-  will-change: transform;
-}
-
-.brand-marquee-sheen {
-  position: absolute;
-  inset: -20% -30%;
-  display: none;
-}
-
-@keyframes orb-drift-a {
-  0%, 100% { transform: translate(0, 0); }
-  50% { transform: translate(50px, 6px); }
-}
-
-@keyframes orb-drift-b {
-  0%, 100% { transform: translate(0, 0); }
-  50% { transform: translate(-60px, -4px); }
-}
-
-@keyframes sheen-sweep {
-  from { transform: translateX(-40%); }
-  to { transform: translateX(40%); }
+.brand-marquee-track,
+.brand-marquee-set {
+  height: 100%;
 }
 
 .brand-marquee-track {
-  position: relative;
-  z-index: 2;
-  display: inline-flex;
-  align-items: center;
-  gap: 0;
-  padding-left: 0;
-  animation: marquee-scroll 40s linear infinite;
-  will-change: transform;
+  width: 100%;
 }
 
-.brand-marquee:hover .brand-marquee-track {
-  animation-play-state: paused;
+.brand-marquee-set {
+  display: grid;
+  width: 100%;
+  grid-template-columns: repeat(8, minmax(0, 1fr));
+}
+
+.brand-marquee-set + .brand-marquee-set {
+  display: none;
 }
 
 .brand-marquee-item {
+  position: relative;
   display: inline-flex;
+  min-width: 0;
+  height: 100%;
   align-items: center;
   justify-content: center;
-  flex-shrink: 0;
-  min-width: 190px;
-  height: 24px;
-  padding: 0 34px;
-  border-right: 1px solid rgba(255, 255, 255, 0.28);
+  gap: 8px;
+  color: #fff;
 }
 
-.brand-marquee-logo {
-  max-height: 18px;
-  max-width: 80px;
-  object-fit: contain;
-  filter: brightness(0) invert(1);
-  opacity: 0.9;
-  transition: opacity 0.25s ease, transform 0.25s ease;
+.brand-marquee-item:not(:last-child)::after {
+  content: '';
+  position: absolute;
+  top: 11px;
+  right: 0;
+  bottom: 11px;
+  width: 1px;
+  background: rgba(255, 255, 255, 0.28);
 }
 
-.brand-marquee-item:hover .brand-marquee-logo {
-  opacity: 1;
-  transform: scale(1.06);
+.brand-marquee-icon {
+  width: 20px;
+  height: 20px;
+  flex: 0 0 auto;
+  color: #fff;
 }
 
 .brand-marquee-wordmark {
   font-family: var(--font-display);
   font-size: 15px;
-  font-weight: 720;
-  letter-spacing: 0.8px;
-  color: #ffffff;
-  opacity: 0.9;
+  font-weight: 650;
+  line-height: 1;
+  letter-spacing: 0;
+  white-space: nowrap;
+}
+
+.brand-apple .brand-marquee-wordmark {
+  font-size: 0;
+}
+
+.brand-oppo .brand-marquee-icon,
+.brand-jbl .brand-marquee-icon {
+  display: none;
+}
+
+.brand-oppo .brand-marquee-wordmark {
+  font-size: 19px;
+  font-weight: 540;
+  letter-spacing: -0.8px;
+}
+
+.brand-jbl .brand-marquee-wordmark {
+  font-size: 16px;
+  font-weight: 780;
+}
+
+.brand-samsung .brand-marquee-icon {
+  display: none;
+}
+
+.brand-samsung .brand-marquee-wordmark {
   text-transform: uppercase;
-  transition: opacity 0.2s ease;
+  font-size: 14px;
+  font-weight: 760;
+  letter-spacing: 0.75px;
 }
 
-.brand-marquee-item:hover .brand-marquee-wordmark {
-  opacity: 1;
+.brand-xiaomi .brand-marquee-wordmark,
+.brand-huawei .brand-marquee-wordmark {
+  font-size: 13px;
+  font-weight: 650;
 }
 
-.brand-marquee-fade {
-  position: absolute;
-  top: 0;
-  bottom: 0;
-  width: 28px;
-  z-index: 3;
-  pointer-events: none;
+.brand-samsung .brand-marquee-wordmark,
+.brand-anker .brand-marquee-wordmark {
+  letter-spacing: 0.4px;
 }
 
-.brand-marquee-fade.left {
-  left: 0;
-  background: #000000;
+.brand-infinix .brand-marquee-wordmark {
+  font-size: 16px;
+  font-weight: 530;
 }
 
-.brand-marquee-fade.right {
-  right: 0;
-  background: #000000;
-}
-
-@keyframes marquee-scroll {
+@keyframes brand-rail-mobile {
   from { transform: translateX(0); }
   to { transform: translateX(-50%); }
 }
 
-@media (max-width: 640px) {
-  .brand-marquee-bg {
-    display: none;
+@media (max-width: 760px) {
+  .brand-marquee {
+    height: 28px;
   }
 
   .brand-marquee-track {
-    animation-duration: 28s;
+    display: flex;
+    width: max-content;
+    animation: brand-rail-mobile 24s linear infinite;
+  }
+
+  .brand-marquee-set,
+  .brand-marquee-set + .brand-marquee-set {
+    display: flex;
+    width: auto;
+    flex: none;
+  }
+
+  .brand-marquee-item {
+    width: 92px;
+    flex: 0 0 92px;
+    gap: 5px;
+  }
+
+  .brand-marquee-item:not(:last-child)::after {
+    top: 6px;
+    bottom: 6px;
+  }
+
+  .brand-marquee-icon {
+    width: 15px;
+    height: 15px;
+  }
+
+  .brand-oppo .brand-marquee-wordmark {
+    font-size: 12px;
+  }
+
+  .brand-jbl .brand-marquee-wordmark {
+    font-size: 10px;
+  }
+
+  .brand-samsung .brand-marquee-wordmark,
+  .brand-xiaomi .brand-marquee-wordmark,
+  .brand-huawei .brand-marquee-wordmark {
+    font-size: 9px;
+  }
+
+  .brand-marquee-wordmark,
+  .brand-infinix .brand-marquee-wordmark {
+    font-size: 10px;
   }
 }
 
 @media (prefers-reduced-motion: reduce) {
-  .brand-marquee-orb,
-  .brand-marquee-sheen,
   .brand-marquee-track {
     animation: none;
   }

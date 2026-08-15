@@ -52,8 +52,10 @@ const CartModal: React.FC<CartModalProps> = ({
                 <h2>Votre Panier</h2>
               </div>
               <motion.button
+                type="button"
                 className="close-btn"
                 onClick={onClose}
+                aria-label="Fermer le panier"
                 whileHover={{ scale: 1.1, rotate: 90 }}
                 whileTap={{ scale: 0.9 }}
               >
@@ -92,8 +94,10 @@ const CartModal: React.FC<CartModalProps> = ({
                       </p>
                       <div className="quantity-controls">
                         <motion.button
+                          type="button"
                           whileHover={{ scale: 1.1 }}
                           whileTap={{ scale: 0.9 }}
+                          aria-label={`Diminuer la quantité de ${item.product.name}`}
                           onClick={() =>
                             onUpdateQuantity(getCartItemKey(item), item.quantity - 1)
                           }
@@ -102,8 +106,10 @@ const CartModal: React.FC<CartModalProps> = ({
                         </motion.button>
                         <span className="quantity">{item.quantity}</span>
                         <motion.button
+                          type="button"
                           whileHover={{ scale: 1.1 }}
                           whileTap={{ scale: 0.9 }}
+                          aria-label={`Augmenter la quantité de ${item.product.name}`}
                           onClick={() =>
                             onUpdateQuantity(getCartItemKey(item), item.quantity + 1)
                           }
@@ -118,8 +124,10 @@ const CartModal: React.FC<CartModalProps> = ({
                         {formatPrice(item.product.price * item.quantity)}
                       </div>
                       <motion.button
+                        type="button"
                         className="remove-btn"
                         onClick={() => onRemoveItem(getCartItemKey(item))}
+                        aria-label={`Retirer ${item.product.name} du panier`}
                         whileHover={{ scale: 1.1 }}
                         whileTap={{ scale: 0.9 }}
                       >
@@ -138,6 +146,7 @@ const CartModal: React.FC<CartModalProps> = ({
                   <span className="total-amount">{formatPrice(total)}</span>
                 </div>
                 <motion.button
+                  type="button"
                   className="checkout-btn"
                   onClick={onCheckout}
                   whileHover={{ scale: 1.02 }}

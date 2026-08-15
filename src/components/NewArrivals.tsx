@@ -22,6 +22,14 @@ const TABS: { key: TabKey; label: string }[] = [
   { key: 'accessory', label: 'Accessoires' },
 ];
 
+const REFERENCE_PRODUCT_ORDER = [
+  'iphone 13 pro',
+  'iphone 13 pro max',
+  'iphone 15 normal',
+  'samsung s23 ultra',
+  'apple magsafe original',
+];
+
 export default function NewArrivals({
   products,
   status = 'ready',
@@ -46,12 +54,18 @@ export default function NewArrivals({
       .filter((product) => brand === 'all' || product.brand === brand)
       .filter((product) => `${product.name} ${product.brand}`.toLowerCase().includes(normalizedQuery))
       .slice()
-      .sort(
-        (a, b) =>
+      .sort((a, b) => {
+        const aRank = REFERENCE_PRODUCT_ORDER.indexOf(a.name.trim().toLowerCase());
+        const bRank = REFERENCE_PRODUCT_ORDER.indexOf(b.name.trim().toLowerCase());
+        const normalizedARank = aRank === -1 ? REFERENCE_PRODUCT_ORDER.length : aRank;
+        const normalizedBRank = bRank === -1 ? REFERENCE_PRODUCT_ORDER.length : bRank;
+        if (normalizedARank !== normalizedBRank) return normalizedARank - normalizedBRank;
+        return (
           Number(b.is_featured) - Number(a.is_featured) ||
           (a.sort_order ?? 0) - (b.sort_order ?? 0) ||
           new Date(b.created_at || 0).getTime() - new Date(a.created_at || 0).getTime()
-      );
+        );
+      });
     return variant === 'compact' ? filtered.slice(0, 5) : filtered;
   }, [products, activeTab, brand, query, variant]);
 

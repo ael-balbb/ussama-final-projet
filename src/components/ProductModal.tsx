@@ -119,7 +119,7 @@ export default function ProductModal({ product, isOpen, onClose, onAddToCart }: 
         >
           <motion.div
             ref={panelRef}
-            className="quickview-panel"
+            className={`quickview-panel quickview-product-${product.category}`}
             role="dialog"
             aria-modal="true"
             aria-label={product.name}
@@ -234,10 +234,10 @@ export default function ProductModal({ product, isOpen, onClose, onAddToCart }: 
             </div>
 
             <aside className="quickview-benefits" aria-label="Services NasriPhone">
-              <span><Truck /><span><strong>Livraison partout au Maroc</strong><small>Service national</small></span></span>
-              <span><CheckCircle2 /><span><strong>Catalogue actualisé</strong><small>Prix et stock synchronisés</small></span></span>
-              <span><Banknote /><span><strong>Paiement à la livraison</strong><small>Réglez à la réception</small></span></span>
-              <span><MessageCircle /><span><strong>Assistance WhatsApp</strong><small>Conseil direct en boutique</small></span></span>
+              <span><Truck /><span><strong>Livraison partout au Maroc</strong><small>Rapide et sécurisée</small></span></span>
+              <span><CheckCircle2 /><span><strong>Produits 100% originaux</strong><small>Garantie constructeur</small></span></span>
+              <span><Banknote /><span><strong>Paiement à la livraison</strong><small>Payez en toute confiance</small></span></span>
+              <span><MessageCircle /><span><strong>Retour facile 7 jours</strong><small>Satisfait ou remboursé</small></span></span>
             </aside>
           </motion.div>
         </motion.div>

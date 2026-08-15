@@ -27,7 +27,7 @@
 @media (max-width: 640px) {
   :root {
     --page-gutter: 16px;
-    --header-h: 68px;
+    --header-h: 50px;
   }
 }
 
