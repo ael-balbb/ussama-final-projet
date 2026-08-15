@@ -128,7 +128,7 @@
 }
 
 @media (max-width: 760px) {
-  .new-arrivals { padding: 5px 14px 9px; }
+  .new-arrivals { padding: 7px 14px 14px; }
   .new-arrivals-compact .new-arrivals-heading { min-height: 28px; }
   .new-arrivals-compact .section-title { font-size: 16px; }
   .new-arrivals-catalog .section-title { font-size: 32px; }
@@ -137,16 +137,22 @@
   .new-arrivals-compact .new-arrivals-see-all svg { width: 16px; height: 16px; }
   .catalog-toolbar { margin-top: 16px; grid-template-columns: 1fr; gap: 10px; }
   .catalog-brand-select { grid-column: auto; }
-  .new-arrivals-grid { grid-template-columns: repeat(2, minmax(0, 1fr)); gap: 8px; }
-  .new-arrivals-compact .product-card:nth-child(2),
-  .new-arrivals-compact .product-card:nth-child(3),
+  .new-arrivals-grid {
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+    column-gap: 12px;
+    row-gap: 12px;
+  }
+  .new-arrivals-compact .product-card:nth-child(1) { order: 1; }
+  .new-arrivals-compact .product-card:nth-child(4) { order: 2; }
+  .new-arrivals-compact .product-card:nth-child(2) { order: 3; }
+  .new-arrivals-compact .product-card:nth-child(3) { order: 4; }
   .new-arrivals-compact .product-card:nth-child(n + 5) { display: none; }
   .new-arrivals-catalog { padding-bottom: 38px; }
 }
 
 @media (max-width: 380px) {
   .new-arrivals { padding-inline: 10px; }
-  .new-arrivals-grid { gap: 8px; }
+  .new-arrivals-grid { column-gap: 10px; row-gap: 12px; }
   .new-arrivals-tabs { height: 46px; }
   .new-arrivals-tab { font-size: 13px; }
 }
