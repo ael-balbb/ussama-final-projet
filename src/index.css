@@ -34,9 +34,9 @@ html {
      ============================================ */
 
   /* Brand & accent — the single interactive color */
-  --primary: #e9c153;
-  --primary-focus: #f1d47f;
-  --primary-on-dark: #f4d35e;
+  --primary: #f5c740;
+  --primary-focus: #ffd45f;
+  --primary-on-dark: #f5c740;
   --primary-dark: #8a6400;
   --primary-light: #f4d35e;
   --focus-ring: #a97800;
@@ -93,9 +93,9 @@ html {
   --space-section: 80px;
 
   /* Layout — shared across all breakpoints */
-  --page-max: 1440px;
-  --page-gutter: clamp(16px, 4vw, 32px);
-  --header-h: 44px;
+  --page-max: 1536px;
+  --page-gutter: clamp(20px, 3.2vw, 50px);
+  --header-h: 56px;
 
   /* Typography */
   --font-display: -apple-system, BlinkMacSystemFont, 'SF Pro Display', 'Inter', 'Segoe UI', system-ui, sans-serif;
@@ -104,10 +104,10 @@ html {
 
 body {
   font-family: var(--font-text);
-  font-size: 17px;               /* {typography.body} — 17px, not 16px */
+  font-size: 16px;
   font-weight: 400;
   line-height: 1.47;
-  letter-spacing: -0.374px;
+  letter-spacing: -0.015em;
   background-color: var(--bg-white);
   color: var(--text-dark);
   width: 100%;

@@ -1,0 +1,14 @@
+.catalog-page-main {
+  min-height: 72vh;
+  background: #fff;
+}
+
+.catalog-route .new-arrivals {
+  padding-top: 34px;
+}
+
+@media (max-width: 640px) {
+  .catalog-route .new-arrivals {
+    padding-top: 24px;
+  }
+}

@@ -1,6 +1,7 @@
-import React, { useEffect, useState } from 'react';
-import { motion, AnimatePresence, useReducedMotion } from 'framer-motion';
-import { ShoppingBag, Search, Menu, X } from 'lucide-react';
+import { useEffect, useState } from 'react';
+import { AnimatePresence, motion, useReducedMotion } from 'framer-motion';
+import { Menu, Search, ShoppingBag, X } from 'lucide-react';
+import { Link, useLocation } from 'react-router-dom';
 import './Header.css';
 
 interface HeaderProps {
@@ -8,115 +9,78 @@ interface HeaderProps {
   onCartClick: () => void;
 }
 
-type NavFilter = 'all' | 'phone' | 'accessory' | null;
-
-const NAV_LINKS: { label: string; href: string; filter: NavFilter }[] = [
-  { label: 'Accueil', href: '#accueil', filter: null },
-  { label: 'Téléphones', href: '#telephones', filter: 'phone' },
-  { label: 'Accessoires', href: '#accessoires', filter: 'accessory' },
-  { label: 'Nouveautés', href: '#nouveautes', filter: 'all' },
+const NAV_LINKS = [
+  { label: 'Accueil', to: '/' },
+  { label: 'Téléphones', to: '/catalog?category=phone' },
+  { label: 'Accessoires', to: '/catalog?category=accessory' },
+  { label: 'Nouveautés', to: '/catalog' },
 ];
 
-const scrollToSection = (href: string) => {
-  const id = href.replace('#', '');
-  const target =
-    document.getElementById(id) ||
-    (id === 'telephones' || id === 'accessoires'
-      ? document.getElementById('nouveautes')
-      : null);
-  target?.scrollIntoView({ behavior: 'smooth', block: 'start' });
-};
-
-const Header: React.FC<HeaderProps> = ({ cartItemsCount, onCartClick }) => {
+export default function Header({ cartItemsCount, onCartClick }: HeaderProps) {
+  const location = useLocation();
   const [menuOpen, setMenuOpen] = useState(false);
   const reduceMotion = useReducedMotion();
 
   useEffect(() => {
     if (!menuOpen) return;
-    const onKey = (e: KeyboardEvent) => {
-      if (e.key === 'Escape') setMenuOpen(false);
+    const onKeyDown = (event: KeyboardEvent) => {
+      if (event.key === 'Escape') setMenuOpen(false);
     };
     document.body.style.overflow = 'hidden';
-    window.addEventListener('keydown', onKey);
+    window.addEventListener('keydown', onKeyDown);
     return () => {
       document.body.style.overflow = '';
-      window.removeEventListener('keydown', onKey);
+      window.removeEventListener('keydown', onKeyDown);
     };
   }, [menuOpen]);
 
-  const handleNavClick = (
-    e: React.MouseEvent<HTMLAnchorElement>,
-    href: string,
-    filter: NavFilter
-  ) => {
-    e.preventDefault();
-    setMenuOpen(false);
-
-    if (filter) {
-      window.dispatchEvent(
-        new CustomEvent('catalog-filter', { detail: { tab: filter } })
-      );
-      window.history.replaceState(null, '', href);
-      // Wait a tick so the mobile drawer can close before scrolling
-      requestAnimationFrame(() => scrollToSection(href));
-      return;
-    }
-
-    window.history.replaceState(null, '', href);
-    requestAnimationFrame(() => scrollToSection(href));
+  const isActive = (to: string) => {
+    if (to === '/') return location.pathname === '/';
+    if (to === '/catalog') return location.pathname === '/catalog' && !location.search;
+    return `${location.pathname}${location.search}` === to;
   };
 
   return (
     <motion.header
       className="header"
-      initial={reduceMotion ? false : { y: -44 }}
+      initial={reduceMotion ? false : { y: -24 }}
       animate={{ y: 0 }}
-      transition={reduceMotion ? { duration: 0 } : { type: 'spring', stiffness: 360, damping: 34 }}
+      transition={reduceMotion ? { duration: 0 } : { type: 'spring', stiffness: 380, damping: 36 }}
     >
       <div className="header-inner">
-        <a
-          href="#accueil"
-          className="header-logo"
-          onClick={(e) => handleNavClick(e, '#accueil', null)}
-        >
-          Nasri<span className="header-logo-accent">Phone</span>
-        </a>
+        <Link to="/" className="header-logo" aria-label="NasriPhone — accueil">
+          <strong>Nasri</strong><span>Phone</span>
+        </Link>
 
         <nav className="header-nav" aria-label="Navigation principale">
           {NAV_LINKS.map((link) => (
-            <a
+            <Link
               key={link.label}
-              href={link.href}
-              className="header-nav-link"
-              onClick={(e) => handleNavClick(e, link.href, link.filter)}
+              to={link.to}
+              className={`header-nav-link ${isActive(link.to) ? 'active' : ''}`}
             >
               {link.label}
-            </a>
+            </Link>
           ))}
         </nav>
 
         <div className="header-actions">
-          <a
-            href="#nouveautes"
-            className="header-icon-btn"
-            aria-label="Rechercher"
-            onClick={(e) => handleNavClick(e, '#nouveautes', 'all')}
-          >
-            <Search size={16} strokeWidth={1.5} />
-          </a>
+          <Link to="/catalog" className="header-icon-btn header-search-btn" aria-label="Rechercher">
+            <Search size={21} strokeWidth={1.7} />
+          </Link>
           <button
             type="button"
             className="header-icon-btn header-cart-btn"
             onClick={onCartClick}
-            aria-label="Panier"
+            aria-label={`Panier, ${cartItemsCount} article${cartItemsCount > 1 ? 's' : ''}`}
           >
-            <ShoppingBag size={16} strokeWidth={1.5} />
+            <ShoppingBag size={22} strokeWidth={1.7} />
             {cartItemsCount > 0 && (
               <motion.span
                 className="cart-badge"
                 initial={{ scale: 0 }}
                 animate={{ scale: 1 }}
-                transition={reduceMotion ? { duration: 0 } : { type: 'spring', stiffness: 500, damping: 28 }}
+                transition={reduceMotion ? { duration: 0 } : { type: 'spring', stiffness: 520, damping: 28 }}
               >
                 {cartItemsCount}
               </motion.span>
@@ -129,7 +93,7 @@ const Header: React.FC<HeaderProps> = ({ cartItemsCount, onCartClick }) => {
             aria-expanded={menuOpen}
             onClick={() => setMenuOpen((open) => !open)}
           >
-            {menuOpen ? <X size={18} strokeWidth={1.5} /> : <Menu size={18} strokeWidth={1.5} />}
+            {menuOpen ? <X size={26} /> : <Menu size={27} />}
           </button>
         </div>
       </div>
@@ -137,8 +101,10 @@ const Header: React.FC<HeaderProps> = ({ cartItemsCount, onCartClick }) => {
       <AnimatePresence>
         {menuOpen && (
           <>
-            <motion.div
+            <motion.button
+              type="button"
               className="header-menu-backdrop"
+              aria-label="Fermer le menu"
               initial={{ opacity: 0 }}
               animate={{ opacity: 1 }}
               exit={{ opacity: 0 }}
@@ -147,20 +113,20 @@ const Header: React.FC<HeaderProps> = ({ cartItemsCount, onCartClick }) => {
             <motion.nav
               className="header-mobile-nav"
               aria-label="Menu mobile"
-              initial={reduceMotion ? { opacity: 0 } : { opacity: 0, y: -8 }}
+              initial={reduceMotion ? { opacity: 0 } : { opacity: 0, y: -10 }}
               animate={{ opacity: 1, y: 0 }}
-              exit={reduceMotion ? { opacity: 0 } : { opacity: 0, y: -8 }}
+              exit={reduceMotion ? { opacity: 0 } : { opacity: 0, y: -10 }}
               transition={reduceMotion ? { duration: 0 } : { type: 'spring', stiffness: 430, damping: 38 }}
             >
               {NAV_LINKS.map((link) => (
-                <a
+                <Link
                   key={link.label}
-                  href={link.href}
-                  className="header-mobile-link"
-                  onClick={(e) => handleNavClick(e, link.href, link.filter)}
+                  to={link.to}
+                  className={`header-mobile-link ${isActive(link.to) ? 'active' : ''}`}
+                  onClick={() => setMenuOpen(false)}
                 >
                   {link.label}
-                </a>
+                </Link>
               ))}
             </motion.nav>
           </>
@@ -168,6 +134,4 @@ const Header: React.FC<HeaderProps> = ({ cartItemsCount, onCartClick }) => {
       </AnimatePresence>
     </motion.header>
   );
-};
-
-export default Header;
+}

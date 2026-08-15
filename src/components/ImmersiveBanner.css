@@ -2,38 +2,72 @@
   width: 100%;
   max-width: var(--page-max);
   margin: 0 auto;
-  padding: 28px var(--page-gutter) 8px;
-  box-sizing: border-box;
-  display: flex;
+  padding: 10px var(--page-gutter) 6px;
+}
+
+.reservation-strip {
+  min-height: 62px;
+  padding: 8px 18px;
+  display: grid;
+  grid-template-columns: 52px 1fr auto;
+  align-items: center;
+  gap: 16px;
+  border-radius: 11px;
+  background: var(--primary);
+  color: #111;
+  box-shadow: 0 7px 24px rgba(245, 199, 64, 0.16);
+}
+
+.reservation-icon {
+  width: 44px;
+  height: 44px;
+  display: inline-flex;
+  align-items: center;
   justify-content: center;
-  content-visibility: auto;
-  contain-intrinsic-size: 400px;
+  border-radius: 50%;
+  background: #050505;
+  color: #fff;
 }
 
-.immersive-banner-frame {
-  width: 100%;
-  border-radius: var(--radius-lg);
-  overflow: hidden;
-  border: 1px solid var(--border);
-  background: #f3f4f6;
-  line-height: 0;
-  box-shadow: 0 8px 28px rgba(0, 0, 0, 0.06);
+.reservation-icon svg { width: 24px; height: 24px; }
+
+.reservation-copy {
+  display: flex;
+  flex-direction: column;
+  line-height: 1.2;
 }
 
-.immersive-banner-image {
-  display: block;
-  width: 100%;
-  height: auto;
-  object-fit: contain;
-  image-rendering: auto;
+.reservation-copy strong { font-size: 18px; font-weight: 730; letter-spacing: -0.025em; }
+.reservation-copy span { margin-top: 3px; font-size: 14px; }
+
+.reservation-action {
+  min-height: 42px;
+  padding: 0 26px;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  gap: 12px;
+  border-radius: 9px;
+  background: #050505;
+  color: #fff;
+  font-size: 15px;
+  font-weight: 620;
+  transition: transform 100ms ease, background-color 160ms ease;
 }
+
+.reservation-action:hover { background: #1d1d1f; }
+.reservation-action:active { transform: scale(0.97); }
 
 @media (max-width: 640px) {
-  .immersive-banner {
-    padding: 16px var(--page-gutter) 4px;
-  }
+  .immersive-banner { padding: 10px 14px 5px; }
+  .reservation-strip { min-height: 72px; grid-template-columns: 43px minmax(0, 1fr) 115px; gap: 10px; padding: 8px 12px; }
+  .reservation-icon { width: 43px; height: 43px; }
+  .reservation-copy strong { font-size: 15px; }
+  .reservation-copy span { font-size: 11px; }
+  .reservation-action { min-height: 42px; width: 115px; padding: 0 8px; gap: 5px; font-size: 11px; }
+}
 
-  .immersive-banner-frame {
-    border-radius: var(--radius-md);
-  }
+@media (max-width: 355px) {
+  .reservation-strip { min-height: 104px; grid-template-columns: 43px 1fr; }
+  .reservation-action { grid-column: 1 / -1; width: 100%; }
 }

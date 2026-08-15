@@ -3,7 +3,8 @@
   width: 100%;
   max-width: 100%;
   background: #000000;
-  padding: 14px 0;
+  min-height: 46px;
+  padding: 11px 0;
   overflow: hidden;
   white-space: nowrap;
   border-bottom: none;
@@ -14,7 +15,7 @@
   inset: 0;
   z-index: 0;
   pointer-events: none;
-  overflow: hidden;
+  display: none;
 }
 
 .brand-marquee-orb {
@@ -80,8 +81,8 @@
   z-index: 2;
   display: inline-flex;
   align-items: center;
-  gap: 48px;
-  padding-left: 48px;
+  gap: 0;
+  padding-left: 0;
   animation: marquee-scroll 40s linear infinite;
   will-change: transform;
 }
@@ -95,7 +96,10 @@
   align-items: center;
   justify-content: center;
   flex-shrink: 0;
+  min-width: 190px;
   height: 24px;
+  padding: 0 34px;
+  border-right: 1px solid rgba(255, 255, 255, 0.28);
 }
 
 .brand-marquee-logo {
@@ -114,9 +118,9 @@
 
 .brand-marquee-wordmark {
   font-family: var(--font-display);
-  font-size: 12px;
-  font-weight: 600;
-  letter-spacing: 0.4px;
+  font-size: 15px;
+  font-weight: 720;
+  letter-spacing: 0.8px;
   color: #ffffff;
   opacity: 0.9;
   text-transform: uppercase;
@@ -131,7 +135,7 @@
   position: absolute;
   top: 0;
   bottom: 0;
-  width: 80px;
+  width: 28px;
   z-index: 3;
   pointer-events: none;
 }

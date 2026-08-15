@@ -18,6 +18,19 @@
   align-items: stretch;
 }
 
+.page-loader {
+  min-height: 70vh;
+  display: grid;
+  place-items: center;
+}
+
+@media (max-width: 640px) {
+  :root {
+    --page-gutter: 16px;
+    --header-h: 68px;
+  }
+}
+
 /* Shared section chassis */
 .home-section {
   max-width: 1440px;

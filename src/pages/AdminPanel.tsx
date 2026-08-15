@@ -4,7 +4,8 @@ import { motion, AnimatePresence } from 'framer-motion';
 import {
   Package, ShoppingBag, ClipboardList, LogOut, Plus, Edit3, Trash2,
   X, Upload, Search, Filter, ChevronDown,
-  DollarSign, Box, AlertCircle, Check, Clock, Truck, XCircle, Image
+  DollarSign, Box, AlertCircle, Check, Clock, Truck, XCircle, Image,
+  LayoutDashboard, MoreVertical, GripVertical, ShieldCheck, RefreshCw
 } from 'lucide-react';
 import {
   verifyToken, fetchProducts, createProduct, updateProduct, deleteProduct,
@@ -14,7 +15,7 @@ import {
 import type { Product, Pack, Order, ProductColor } from '../types';
 import './AdminPanel.css';
 
-type Tab = 'products' | 'packs' | 'orders';
+type Tab = 'overview' | 'products' | 'packs' | 'orders';
 
 const PRESET_COLORS: { name: string; hex: string }[] = [
   { name: 'Blanc', hex: '#f5f5f7' },
@@ -188,9 +189,9 @@ const AdminPanel: React.FC = () => {
     const files = e.target.files;
     if (!files || files.length === 0) return;
 
-    const maxImages = 3 - productForm.images.length;
+    const maxImages = 8 - productForm.images.length;
     if (maxImages <= 0) {
-      alert('Maximum 3 images par produit');
+      alert('Maximum 8 images par produit');
       return;
     }
 
@@ -201,7 +202,7 @@ const AdminPanel: React.FC = () => {
       const urls = await uploadImages(filesToUpload);
       setProductForm(prev => ({
         ...prev,
-        images: [...prev.images, ...urls].slice(0, 3)
+        images: [...prev.images, ...urls].slice(0, 8)
       }));
     } catch (error) {
       console.error('Upload error:', error);
@@ -466,11 +467,7 @@ const AdminPanel: React.FC = () => {
       <aside className={`admin-sidebar ${sidebarOpen ? 'open' : ''}`}>
         <div className="sidebar-header">
           <div className="sidebar-brand">
-            <div className="sidebar-logo">NP</div>
-            <div>
-              <h2>Nasri Phone</h2>
-              <span>Admin Panel</span>
-            </div>
+            <h2><strong>Nasri</strong>Phone <span>Admin</span></h2>
           </div>
           <button className="sidebar-close-mobile" onClick={() => setSidebarOpen(false)}>
             <X size={20} />
@@ -478,6 +475,13 @@ const AdminPanel: React.FC = () => {
         </div>
 
         <nav className="sidebar-nav">
+          <button
+            className={`sidebar-nav-item ${activeTab === 'overview' ? 'active' : ''}`}
+            onClick={() => { setActiveTab('overview'); setSidebarOpen(false); }}
+          >
+            <LayoutDashboard size={19} />
+            <span>Vue d’ensemble</span>
+          </button>
           <button
             className={`sidebar-nav-item ${activeTab === 'products' ? 'active' : ''}`}
             onClick={() => { setActiveTab('products'); setSidebarOpen(false); }}
@@ -491,7 +495,7 @@ const AdminPanel: React.FC = () => {
             onClick={() => { setActiveTab('packs'); setSidebarOpen(false); }}
           >
             <ShoppingBag size={20} />
-            <span>Promo Packs</span>
+            <span>Packs promo</span>
             <span className="nav-badge">{totalPacksCount}</span>
           </button>
           <button
@@ -505,9 +509,16 @@ const AdminPanel: React.FC = () => {
         </nav>
 
         <div className="sidebar-footer">
+          <div className="sidebar-profile">
+            <span className="sidebar-avatar">N</span>
+            <span>
+              <strong>{localStorage.getItem('admin_email') || 'Administrateur'}</strong>
+              <small>Administrateur</small>
+            </span>
+          </div>
           <button className="sidebar-logout" onClick={handleLogout}>
             <LogOut size={18} />
-            <span>Déconnexion</span>
+            <span className="sr-only">Déconnexion</span>
           </button>
         </div>
       </aside>
@@ -525,12 +536,22 @@ const AdminPanel: React.FC = () => {
             </div>
           </button>
           <h1 className="topbar-title">
-            {activeTab === 'products' && 'Gestion des Produits'}
-            {activeTab === 'packs' && 'Gestion des Promo Packs'}
-            {activeTab === 'orders' && 'Gestion des Commandes'}
+            {activeTab === 'overview' && 'Vue d’ensemble'}
+            {activeTab === 'products' && 'Gestion des produits'}
+            {activeTab === 'packs' && 'Gestion des packs promo'}
+            {activeTab === 'orders' && 'Gestion des commandes'}
           </h1>
           <div className="topbar-right">
-            <span className="admin-email">{localStorage.getItem('admin_email')}</span>
+            {activeTab === 'products' && (
+              <motion.button className="topbar-create-btn" onClick={() => openProductModal()} whileTap={{ scale: 0.98 }}>
+                <Plus size={18} /> Nouveau produit
+              </motion.button>
+            )}
+            {activeTab === 'packs' && (
+              <motion.button className="topbar-create-btn" onClick={() => openPackModal()} whileTap={{ scale: 0.98 }}>
+                <Plus size={18} /> Nouveau pack
+              </motion.button>
+            )}
           </div>
         </header>
 
@@ -543,7 +564,7 @@ const AdminPanel: React.FC = () => {
         )}
 
         {/* Stats Cards */}
-        <div className="admin-stats">
+        {activeTab === 'overview' && <div className="admin-stats">
           <motion.div className="stat-card" whileHover={{ y: -4 }}>
             <div className="stat-icon" style={{ background: '#E9C153' }}>
               <DollarSign size={22} />
@@ -580,12 +601,12 @@ const AdminPanel: React.FC = () => {
               <span className="stat-label">En Attente</span>
             </div>
           </motion.div>
-        </div>
+        </div>}
 
         {/* ===== PRODUCTS TAB ===== */}
         {activeTab === 'products' && (
           <div className="admin-section">
-            <div className="section-toolbar">
+            <div className="section-toolbar product-toolbar">
               <div className="toolbar-search">
                 <Search size={18} />
                 <input
@@ -595,23 +616,14 @@ const AdminPanel: React.FC = () => {
                   onChange={(e) => setSearchTerm(e.target.value)}
                 />
               </div>
-              <motion.button
-                className="toolbar-add-btn"
-                onClick={() => openProductModal()}
-                whileHover={{ scale: 1.02 }}
-                whileTap={{ scale: 0.98 }}
-              >
-                <Plus size={18} />
-                Ajouter Produit
-              </motion.button>
+              <span className="section-count">{filteredProducts.length} produit(s)</span>
             </div>
 
             <div className="admin-table-wrapper">
               <table className="admin-table">
                 <thead>
                   <tr>
-                    <th>Image</th>
-                    <th>Nom</th>
+                    <th>Produit</th>
                     <th>Catégorie</th>
                     <th>Prix</th>
                     <th>Promo</th>
@@ -624,7 +636,7 @@ const AdminPanel: React.FC = () => {
                 <tbody>
                   {filteredProducts.length === 0 ? (
                     <tr>
-                      <td colSpan={9} className="empty-table">
+                      <td colSpan={8} className="empty-table">
                         <Package size={40} />
                         <p>Aucun produit trouvé</p>
                       </td>
@@ -633,18 +645,18 @@ const AdminPanel: React.FC = () => {
                     filteredProducts.map((product) => (
                       <tr key={product.id}>
                         <td>
-                          <div className="table-image">
-                            {product.image ? (
-                              <img src={product.image} alt={product.name} />
-                            ) : (
-                              <div className="no-image"><Image size={20} /></div>
-                            )}
-                          </div>
-                        </td>
-                        <td>
-                          <div className="table-product-name">
-                            <strong>{product.name}</strong>
-                            {product.brand && <span className="table-brand">{product.brand}</span>}
+                          <div className="table-product-cell">
+                            <div className="table-image">
+                              {product.image ? (
+                                <img src={product.image} alt="" />
+                              ) : (
+                                <div className="no-image"><Image size={20} /></div>
+                              )}
+                            </div>
+                            <div className="table-product-name">
+                              <strong>{product.name}</strong>
+                              {product.brand && <span className="table-brand">{product.brand}</span>}
+                            </div>
                           </div>
                         </td>
                         <td>
@@ -666,7 +678,13 @@ const AdminPanel: React.FC = () => {
                           </span>
                         </td>
                         <td>
-                          <span className="table-color-count">{product.colors?.length || 0}</span>
+                          <span className="table-color-swatches" aria-label={`${product.colors?.length || 0} coloris`}>
+                            {(product.colors || []).slice(0, 4).map((color) => (
+                              <i key={`${product.id}-${color.hex}`} style={{ backgroundColor: color.hex }} />
+                            ))}
+                            {(product.colors?.length || 0) > 4 && <small>+{(product.colors?.length || 0) - 4}</small>}
+                            {!product.colors?.length && <span className="table-muted">—</span>}
+                          </span>
                         </td>
                         <td>
                           <span className={`catalog-status-badge ${product.is_active === false ? 'draft' : 'live'}`}>
@@ -679,7 +697,7 @@ const AdminPanel: React.FC = () => {
                               <Edit3 size={16} />
                             </button>
                             <button className="action-btn delete" onClick={() => handleDeleteProduct(product.id)} title="Supprimer">
-                              <Trash2 size={16} />
+                              <MoreVertical size={17} />
                             </button>
                           </div>
                         </td>
@@ -898,12 +916,16 @@ const AdminPanel: React.FC = () => {
                 transition={{ type: 'spring', damping: 36, stiffness: 420 }}
               >
               <div className="modal-header">
-                <h2>{editingProduct ? 'Modifier Produit' : 'Nouveau Produit'}</h2>
+                <div>
+                  <h2>{editingProduct ? 'Modifier le produit' : 'Nouveau produit'}</h2>
+                  <span>{productForm.name || 'Ajoutez les informations du produit'}</span>
+                </div>
                 <button className="modal-close" onClick={() => setShowProductModal(false)}>
                   <X size={20} />
                 </button>
               </div>
-              <form onSubmit={handleProductSubmit} className="modal-form">
+              <form onSubmit={handleProductSubmit} className="modal-form admin-product-editor-form">
+                <div className="admin-form-fields">
                 <div className="form-row-admin">
                   <div className="form-group-admin">
                     <label>Nom du Produit *</label>
@@ -1011,7 +1033,7 @@ const AdminPanel: React.FC = () => {
 
                 <div className="form-group-admin">
                   <label>
-                    Images ({productForm.images.length}/3)
+                    Galerie d’images ({productForm.images.length}/8)
                     {uploadingImages && <span className="uploading-badge">Téléchargement...</span>}
                   </label>
                   <div className="images-preview">
@@ -1023,7 +1045,7 @@ const AdminPanel: React.FC = () => {
                         </button>
                       </div>
                     ))}
-                    {productForm.images.length < 3 && (
+                    {productForm.images.length < 8 && (
                       <label className="image-upload-btn">
                         <Upload size={24} />
                         <span>Ajouter</span>
@@ -1053,6 +1075,7 @@ const AdminPanel: React.FC = () => {
                       <div className="colors-admin-list">
                         {productForm.colors.map((color, idx) => (
                           <div key={`${color.name}-${idx}`} className="color-admin-item">
+                            <GripVertical className="color-drag-handle" size={16} aria-hidden="true" />
                             <img src={color.image} alt={color.name} />
                             <span
                               className="color-admin-swatch"
@@ -1150,9 +1173,45 @@ const AdminPanel: React.FC = () => {
                     Annuler
                   </button>
                   <button type="submit" className="btn-save">
-                    {editingProduct ? 'Mettre à jour' : 'Créer Produit'}
+                    <Check size={16} /> {editingProduct ? 'Enregistrer' : 'Créer le produit'}
                   </button>
                 </div>
+                </div>
+
+                <aside className="admin-product-preview" aria-label="Aperçu boutique">
+                  <div className="preview-sticky">
+                    <strong>Aperçu boutique</strong>
+                    <span>{productForm.name || 'Nom du produit'}</span>
+                    <div className="preview-image-wrap">
+                      {productForm.images[0] || productForm.colors[0]?.image ? (
+                        <img src={productForm.images[0] || productForm.colors[0]?.image} alt="" />
+                      ) : (
+                        <Image size={44} />
+                      )}
+                    </div>
+                    <div className="preview-swatches">
+                      {productForm.colors.slice(0, 5).map((color, index) => (
+                        <i key={`${color.hex}-${index}`} className={index === 0 ? 'selected' : ''} style={{ backgroundColor: color.hex }} />
+                      ))}
+                    </div>
+                    <span className={`preview-stock ${Number(productForm.stock) > 0 ? 'available' : ''}`}>
+                      {Number(productForm.stock) > 0 ? 'En stock' : 'Rupture de stock'}
+                    </span>
+                    <div className="preview-price">
+                      <strong>{Number(productForm.price || 0).toLocaleString()} DH</strong>
+                      {Number(productForm.compare_at_price) > Number(productForm.price) && (
+                        <del>{Number(productForm.compare_at_price).toLocaleString()} DH</del>
+                      )}
+                    </div>
+                    {productForm.promo_label && <span className="preview-promo">{productForm.promo_label}</span>}
+                    <div className="preview-services">
+                      <span><Truck size={18} /><i><strong>Livraison partout au Maroc</strong><small>Rapide et suivie</small></i></span>
+                      <span><ShieldCheck size={18} /><i><strong>Catalogue synchronisé</strong><small>Stock piloté depuis l’admin</small></i></span>
+                      <span><DollarSign size={18} /><i><strong>Paiement à la livraison</strong><small>Commande sécurisée</small></i></span>
+                      <span><RefreshCw size={18} /><i><strong>Assistance WhatsApp</strong><small>Conseil avant commande</small></i></span>
+                    </div>
+                  </div>
+                </aside>
               </form>
               </motion.div>
             </motion.div>

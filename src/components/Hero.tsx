@@ -1,7 +1,10 @@
 import React, { useEffect, useRef, useState } from 'react';
 import { motion, useReducedMotion } from 'framer-motion';
 import { ArrowRight } from 'lucide-react';
+import { Link } from 'react-router-dom';
 import './Hero.css';
+
+const MotionLink = motion.create(Link);
 
 const Hero: React.FC = () => {
   const videoRef = useRef<HTMLVideoElement>(null);
@@ -77,21 +80,21 @@ const Hero: React.FC = () => {
           </p>
 
           <div className="hero-actions">
-            <motion.a
-              href="#nouveautes"
+            <MotionLink
+              to="/catalog"
               className="hero-cta"
               whileTap={reduceMotion ? undefined : { scale: 0.96 }}
             >
               Explorer les produits
               <ArrowRight size={18} strokeWidth={1.5} />
-            </motion.a>
-            <motion.a
-              href="#nouveautes"
+            </MotionLink>
+            <MotionLink
+              to="/catalog"
               className="hero-cta-ghost"
               whileTap={reduceMotion ? undefined : { scale: 0.96 }}
             >
               Voir les nouveautés
-            </motion.a>
+            </MotionLink>
           </div>
         </motion.div>
       </div>

@@ -3,7 +3,7 @@ import { motion } from 'framer-motion';
 import { ArrowRight } from 'lucide-react';
 import type { AddToCartHandler, Pack, Product } from '../types';
 import ProductModal from './ProductModal';
-import { formatPrice } from '../utils/display';
+import { formatPrice, getOriginalPrice } from '../utils/display';
 import './MomentOffer.css';
 
 interface MomentOfferProps {
@@ -34,6 +34,7 @@ const MomentOffer: React.FC<MomentOfferProps> = ({ pack, onAddToCart }) => {
   const openModal = () => setIsModalOpen(true);
 
   if (!product) return null;
+  const originalPrice = getOriginalPrice(product);
 
   return (
     <section className="moment-offer" id="offres" aria-label="Offre du moment">
@@ -53,20 +54,19 @@ const MomentOffer: React.FC<MomentOfferProps> = ({ pack, onAddToCart }) => {
           }
         }}
       >
-        {product.image ? (
-          <div
-            className="moment-offer-bg"
-            style={{ backgroundImage: `url(${product.image})` }}
-            aria-hidden="true"
-          />
-        ) : (
-          <div className="moment-offer-bg moment-offer-bg-fallback" aria-hidden="true" />
-        )}
-        <div className="moment-offer-overlay" aria-hidden="true" />
+        <div className="moment-offer-visual">
+          {product.image ? <img src={product.image} alt="" /> : null}
+        </div>
         <div className="moment-offer-content">
           <span className="moment-offer-eyebrow">L'offre du moment</span>
           <h2 className="moment-offer-title">{product.name}</h2>
-          <p className="moment-offer-price">Prix spécial : {formatPrice(product.price)}</p>
+          <p className="moment-offer-description">{product.description}</p>
+          <p className="moment-offer-price">
+            <strong>{formatPrice(product.price)}</strong>
+            {originalPrice && <del>{formatPrice(originalPrice)}</del>}
+          </p>
+        </div>
+        <div className="moment-offer-action-wrap">
           <button
             type="button"
             className="moment-offer-cta"
@@ -75,7 +75,7 @@ const MomentOffer: React.FC<MomentOfferProps> = ({ pack, onAddToCart }) => {
               openModal();
             }}
           >
-            Acheter maintenant
+            Découvrir le pack
             <ArrowRight size={16} strokeWidth={1.5} />
           </button>
         </div>

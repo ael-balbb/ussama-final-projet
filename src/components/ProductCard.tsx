@@ -1,6 +1,6 @@
-import React, { useState } from 'react';
+import { useState } from 'react';
 import { motion, useReducedMotion } from 'framer-motion';
-import { ShoppingBag } from 'lucide-react';
+import { Eye, Heart } from 'lucide-react';
 import type { AddToCartHandler, Product } from '../types';
 import ProductModal from './ProductModal';
 import { formatPrice, getAvailableColors, getBadges, getOriginalPrice } from '../utils/display';
@@ -9,102 +9,98 @@ import './ProductCard.css';
 interface ProductCardProps {
   product: Product;
   onAddToCart: AddToCartHandler;
+  variant?: 'compact' | 'catalog';
 }
 
-const CATEGORY_LABELS: Record<Product['category'], string> = {
-  phone: 'Téléphone',
-  accessory: 'Accessoire',
+const productSubtitle = (product: Product) => {
+  const capacity = product.description?.match(/\b\d+\s?(?:Go|GB|To|TB)\b/i)?.[0];
+  return capacity || product.brand;
 };
 
-const ProductCard: React.FC<ProductCardProps> = ({ product, onAddToCart }) => {
+export default function ProductCard({ product, onAddToCart, variant = 'compact' }: ProductCardProps) {
   const [isModalOpen, setIsModalOpen] = useState(false);
+  const [favorite, setFavorite] = useState(false);
   const reduceMotion = useReducedMotion();
-
   const badges = getBadges(product);
   const originalPrice = getOriginalPrice(product);
-  const image = product.images?.[0] || product.image || '';
   const availableColors = getAvailableColors(product);
-  const openProduct = () => setIsModalOpen(true);
+  const image = availableColors[0]?.image || product.images?.[0] || product.image || '';
+  const lowStock = product.stock > 0 && product.stock <= 3;
 
   return (
     <>
       <motion.article
-        className="product-card"
-        onClick={openProduct}
-        onKeyDown={(event) => {
-          if (event.key === 'Enter' || event.key === ' ') {
-            event.preventDefault();
-            openProduct();
-          }
-        }}
-        role="button"
-        tabIndex={0}
-        aria-label={`Voir ${product.name}`}
-        whileTap={reduceMotion ? undefined : { scale: 0.99 }}
+        className={`product-card product-card-${variant}`}
+        whileHover={reduceMotion ? undefined : { y: -3 }}
+        transition={{ type: 'spring', stiffness: 360, damping: 30 }}
       >
-        <div className="product-card-media">
-          {badges.length > 0 && (
-            <div className="product-card-badges">
-              {badges.map((badge) => (
-                <span key={badge.label} className={`product-badge badge-${badge.variant}`}>
-                  {badge.label}
-                </span>
-              ))}
-            </div>
-          )}
-          {image ? (
-            <img
-              src={image}
-              alt={product.name}
-              className="product-card-image"
-              loading="lazy"
-              decoding="async"
-            />
-          ) : (
-            <div className="product-card-image-placeholder" aria-hidden="true" />
-          )}
-        </div>
-
-        <div className="product-card-info">
-          <div className="product-card-text">
-            <span className="product-card-category">
-              {product.brand || CATEGORY_LABELS[product.category]}
-            </span>
-            <h3 className="product-card-name">{product.name}</h3>
-            <div className="product-card-prices">
-              <span className="product-card-price">{formatPrice(product.price)}</span>
-              {originalPrice && (
-                <span className="product-card-price-original">{formatPrice(originalPrice)}</span>
-              )}
-            </div>
-            <div className="product-card-meta">
-              {availableColors.length > 0 && (
-                <span className="product-card-swatches" aria-label={`${availableColors.length} coloris disponibles`}>
-                  {availableColors.slice(0, 4).map((color) => (
-                    <span key={color.name} style={{ backgroundColor: color.hex }} title={color.name} />
-                  ))}
-                  {availableColors.length > 4 && <small>+{availableColors.length - 4}</small>}
-                </span>
-              )}
-              <span className={`product-card-stock ${product.stock > 0 ? '' : 'out'}`}>
-                {product.stock > 0 ? 'En stock' : 'Épuisé'}
-              </span>
-            </div>
+        <button
+          type="button"
+          className="product-card-open"
+          onClick={() => setIsModalOpen(true)}
+          aria-label={`Voir ${product.name}`}
+        >
+          <div className="product-card-media">
+            {badges.length > 0 && (
+              <div className="product-card-badges">
+                {badges.slice(0, 1).map((badge) => (
+                  <span key={badge.label} className={`product-badge badge-${badge.variant}`}>
+                    {badge.label}
+                  </span>
+                ))}
+              </div>
+            )}
+            {image ? (
+              <img src={image} alt="" className="product-card-image" loading="lazy" decoding="async" />
+            ) : (
+              <div className="product-card-image-placeholder" aria-hidden="true" />
+            )}
           </div>
 
-          <button
-            type="button"
-            className="product-card-quickadd"
-            aria-label={`Ajouter ${product.name} au panier`}
-            onClick={(e) => {
-              e.stopPropagation();
-              onAddToCart(product, availableColors[0]);
-            }}
-            disabled={product.stock <= 0 || (product.colors?.length ? availableColors.length === 0 : false)}
-          >
-            <ShoppingBag size={17} strokeWidth={1.5} />
-          </button>
-        </div>
+          <div className="product-card-info">
+            <h2 className="product-card-name">{product.name}</h2>
+            <span className="product-card-subtitle">{productSubtitle(product)}</span>
+            {availableColors.length > 0 && (
+              <span className="product-card-swatches" aria-label={`${availableColors.length} coloris disponibles`}>
+                {availableColors.slice(0, 4).map((color, index) => (
+                  <span
+                    key={`${color.name}-${index}`}
+                    className={index === 0 ? 'selected' : ''}
+                    style={{ backgroundColor: color.hex }}
+                    title={color.name}
+                  />
+                ))}
+              </span>
+            )}
+            <span className={`product-card-stock ${product.stock <= 0 ? 'out' : lowStock ? 'low' : ''}`}>
+              <i aria-hidden="true" />
+              {product.stock <= 0 ? 'Épuisé' : lowStock ? `Plus que ${product.stock} en stock` : 'En stock'}
+            </span>
+            <span className="product-card-prices">
+              <strong>{formatPrice(product.price)}</strong>
+              {originalPrice && <del>{formatPrice(originalPrice)}</del>}
+            </span>
+          </div>
+        </button>
+
+        <button
+          type="button"
+          className={`product-card-favorite ${favorite ? 'active' : ''}`}
+          onClick={() => setFavorite((current) => !current)}
+          aria-label={favorite ? `Retirer ${product.name} des favoris` : `Ajouter ${product.name} aux favoris`}
+          aria-pressed={favorite}
+        >
+          <Heart size={19} strokeWidth={1.6} fill={favorite ? 'currentColor' : 'none'} />
+        </button>
+
+        <button
+          type="button"
+          className="product-card-quickview"
+          onClick={() => setIsModalOpen(true)}
+          aria-label={`Aperçu de ${product.name}`}
+        >
+          <Eye size={18} strokeWidth={1.6} />
+        </button>
       </motion.article>
 
       <ProductModal
@@ -115,6 +111,4 @@ const ProductCard: React.FC<ProductCardProps> = ({ product, onAddToCart }) => {
       />
     </>
   );
-};
-
-export default ProductCard;
+}
