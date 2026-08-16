@@ -13,7 +13,7 @@ const Hero: React.FC = () => {
     <section className="hero" id="accueil">
       <img
         className="hero-bg is-ready"
-        src="/hero-canvas-reference.png"
+        src="/hero-shop-owner.jpg"
         alt=""
         fetchPriority="high"
         decoding="async"

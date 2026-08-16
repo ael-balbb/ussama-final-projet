@@ -6,7 +6,7 @@
   display: flex;
   align-items: center;
   overflow: hidden;
-  background: #090909 url('/hero-canvas-reference.png') center / cover no-repeat;
+  background: #090909 url('/hero-shop-owner.jpg') center 15% / cover no-repeat;
 }
 
 .hero-bg {
@@ -16,7 +16,7 @@
   width: 100%;
   height: 100%;
   object-fit: cover;
-  object-position: center;
+  object-position: center 15%;
   opacity: 0;
   transform: translateZ(0);
   transition: opacity 300ms ease;
@@ -29,7 +29,7 @@
   inset: 0;
   z-index: 1;
   pointer-events: none;
-  background: linear-gradient(90deg, rgba(0, 0, 0, 0.93) 0%, rgba(0, 0, 0, 0.72) 28%, rgba(0, 0, 0, 0.15) 63%, rgba(0, 0, 0, 0.08) 100%);
+  background: linear-gradient(90deg, rgba(0, 0, 0, 0.94) 0%, rgba(0, 0, 0, 0.78) 30%, rgba(0, 0, 0, 0.28) 62%, rgba(0, 0, 0, 0.12) 100%);
 }
 
 .hero-content-wrap {
@@ -110,10 +110,10 @@
     align-items: center;
   }
 
-  .hero-bg { object-position: 100% center; }
+  .hero-bg { object-position: center 28%; }
 
   .hero-overlay {
-    background: linear-gradient(90deg, rgba(0, 0, 0, 0.88) 0%, rgba(0, 0, 0, 0.6) 52%, rgba(0, 0, 0, 0.16) 100%);
+    background: linear-gradient(90deg, rgba(0, 0, 0, 0.9) 0%, rgba(0, 0, 0, 0.7) 55%, rgba(0, 0, 0, 0.28) 100%);
   }
 
   .hero-content-wrap { padding: 16px var(--page-gutter); }
