@@ -23,6 +23,9 @@
   gap: 28px;
   overflow-x: hidden;
   overflow-y: auto;
+  overscroll-behavior: contain;
+  touch-action: pan-y;
+  scrollbar-gutter: stable;
   border: 1px solid #d8d8dc;
   border-radius: 14px;
   background: #fff;

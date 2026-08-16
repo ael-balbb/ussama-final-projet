@@ -179,6 +179,13 @@
 .product-card-catalog .product-card-prices del { font-size: 13px; }
 .product-card-catalog .product-card-quickview { display: none; }
 
+@media (min-width: 761px) {
+  .product-card-compact .product-card-image { transform: scale(1.1); }
+  .product-card-compact:hover .product-card-image { transform: scale(1.14); }
+  .product-card-catalog .product-card-image { transform: scale(1.03); }
+  .product-card-catalog:hover .product-card-image { transform: scale(1.07); }
+}
+
 @media (max-width: 760px) {
   .product-card-compact {
     height: 126px;

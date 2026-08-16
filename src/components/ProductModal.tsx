@@ -1,4 +1,4 @@
-import { useCallback, useEffect, useMemo, useRef, useState } from 'react';
+import { useCallback, useEffect, useMemo, useRef, useState, type WheelEvent as ReactWheelEvent } from 'react';
 import { createPortal } from 'react-dom';
 import { AnimatePresence, motion, useReducedMotion } from 'framer-motion';
 import {
@@ -67,8 +67,22 @@ export default function ProductModal({ product, isOpen, onClose, onAddToCart }: 
     if (!isOpen) return;
     const previousFocus = document.activeElement as HTMLElement | null;
     const scrollY = window.scrollY;
-    const previousOverflow = document.body.style.overflow;
+    const previousHtmlOverflow = document.documentElement.style.overflow;
+    const previousBodyStyles = {
+      overflow: document.body.style.overflow,
+      position: document.body.style.position,
+      top: document.body.style.top,
+      width: document.body.style.width,
+      paddingRight: document.body.style.paddingRight,
+    };
+    const scrollbarWidth = window.innerWidth - document.documentElement.clientWidth;
+
+    document.documentElement.style.overflow = 'hidden';
     document.body.style.overflow = 'hidden';
+    document.body.style.position = 'fixed';
+    document.body.style.top = `-${scrollY}px`;
+    document.body.style.width = '100%';
+    if (scrollbarWidth > 0) document.body.style.paddingRight = `${scrollbarWidth}px`;
 
     const onKeyDown = (event: KeyboardEvent) => {
       if (event.key === 'Escape') close();
@@ -91,11 +105,22 @@ export default function ProductModal({ product, isOpen, onClose, onAddToCart }: 
     requestAnimationFrame(() => closeButtonRef.current?.focus());
     return () => {
       window.removeEventListener('keydown', onKeyDown);
-      document.body.style.overflow = previousOverflow;
+      document.documentElement.style.overflow = previousHtmlOverflow;
+      document.body.style.overflow = previousBodyStyles.overflow;
+      document.body.style.position = previousBodyStyles.position;
+      document.body.style.top = previousBodyStyles.top;
+      document.body.style.width = previousBodyStyles.width;
+      document.body.style.paddingRight = previousBodyStyles.paddingRight;
+      previousFocus?.focus({ preventScroll: true });
       window.scrollTo({ top: scrollY, behavior: 'auto' });
-      previousFocus?.focus();
     };
   }, [close, isOpen]);
+
+  const redirectBackdropScroll = useCallback((event: ReactWheelEvent<HTMLDivElement>) => {
+    if (!panelRef.current || panelRef.current.contains(event.target as Node)) return;
+    event.preventDefault();
+    panelRef.current.scrollTop += event.deltaY;
+  }, []);
 
   if (typeof document === 'undefined') return null;
 
@@ -112,6 +137,7 @@ export default function ProductModal({ product, isOpen, onClose, onAddToCart }: 
         <motion.div
           className="quickview-backdrop"
           onClick={close}
+          onWheel={redirectBackdropScroll}
           initial={{ opacity: 0 }}
           animate={{ opacity: 1 }}
           exit={{ opacity: 0 }}
