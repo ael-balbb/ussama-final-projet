@@ -5,7 +5,7 @@ import {
   Package, ShoppingBag, ClipboardList, LogOut, Plus, Edit3, Trash2,
   X, Upload, Search, Filter, ChevronDown,
   DollarSign, Box, AlertCircle, Check, Clock, Truck, XCircle, Image,
-  LayoutDashboard, MoreVertical, GripVertical, ShieldCheck, RefreshCw
+  LayoutDashboard, MoreVertical, GripVertical, ShieldCheck, RefreshCw, MoveHorizontal
 } from 'lucide-react';
 import {
   verifyToken, fetchProducts, createProduct, updateProduct, deleteProduct,
@@ -619,6 +619,11 @@ const AdminPanel: React.FC = () => {
               <span className="section-count">{filteredProducts.length} produit(s)</span>
             </div>
 
+            <div className="admin-table-scroll-hint" aria-hidden="true">
+              <MoveHorizontal size={15} />
+              Glissez horizontalement pour afficher toutes les colonnes
+            </div>
+
             <div className="admin-table-wrapper">
               <table className="admin-table">
                 <thead>
@@ -693,10 +698,10 @@ const AdminPanel: React.FC = () => {
                         </td>
                         <td>
                           <div className="table-actions">
-                            <button className="action-btn edit" onClick={() => openProductModal(product)} title="Modifier">
+                            <button className="action-btn edit" onClick={() => openProductModal(product)} title="Modifier" aria-label={`Modifier ${product.name}`}>
                               <Edit3 size={16} />
                             </button>
-                            <button className="action-btn delete" onClick={() => handleDeleteProduct(product.id)} title="Supprimer">
+                            <button className="action-btn delete" onClick={() => handleDeleteProduct(product.id)} title="Supprimer" aria-label={`Supprimer ${product.name}`}>
                               <MoreVertical size={17} />
                             </button>
                           </div>
