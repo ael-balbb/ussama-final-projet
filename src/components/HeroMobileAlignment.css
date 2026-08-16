@@ -1,0 +1,28 @@
+@media (max-width: 640px) {
+  .hero-content-wrap {
+    display: flex;
+    justify-content: center;
+    text-align: center;
+  }
+
+  .hero-content {
+    width: min(100%, 238px);
+    max-width: 238px;
+    margin-inline: auto;
+  }
+
+  .hero-title,
+  .hero-subtitle,
+  .hero-actions {
+    margin-inline: auto;
+  }
+
+  .hero-actions {
+    align-items: stretch;
+  }
+
+  .hero-cta,
+  .hero-cta-ghost {
+    text-align: center;
+  }
+}
