@@ -68,6 +68,7 @@ export default function ProductModal({ product, isOpen, onClose, onAddToCart }: 
     const previousFocus = document.activeElement as HTMLElement | null;
     const scrollY = window.scrollY;
     const previousHtmlOverflow = document.documentElement.style.overflow;
+    const previousScrollBehavior = document.documentElement.style.scrollBehavior;
     const previousBodyStyles = {
       overflow: document.body.style.overflow,
       position: document.body.style.position,
@@ -78,6 +79,7 @@ export default function ProductModal({ product, isOpen, onClose, onAddToCart }: 
     const scrollbarWidth = window.innerWidth - document.documentElement.clientWidth;
 
     document.documentElement.style.overflow = 'hidden';
+    document.documentElement.style.scrollBehavior = 'auto';
     document.body.style.overflow = 'hidden';
     document.body.style.position = 'fixed';
     document.body.style.top = `-${scrollY}px`;
@@ -112,7 +114,10 @@ export default function ProductModal({ product, isOpen, onClose, onAddToCart }: 
       document.body.style.width = previousBodyStyles.width;
       document.body.style.paddingRight = previousBodyStyles.paddingRight;
       previousFocus?.focus({ preventScroll: true });
-      window.scrollTo({ top: scrollY, behavior: 'auto' });
+      window.scrollTo({ top: scrollY, left: 0, behavior: 'auto' });
+      requestAnimationFrame(() => {
+        document.documentElement.style.scrollBehavior = previousScrollBehavior;
+      });
     };
   }, [close, isOpen]);
 
