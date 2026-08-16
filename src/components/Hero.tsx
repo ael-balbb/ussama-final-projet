@@ -36,8 +36,7 @@ const Hero: React.FC = () => {
 
           <p className="hero-subtitle">
             Découvrez les derniers smartphones, accessoires et objets connectés
-            aux meilleurs prix. Les plus grandes marques, avec livraison partout
-            au Maroc et paiement à la livraison.
+            aux meilleurs prix.
           </p>
 
           <div className="hero-actions">
