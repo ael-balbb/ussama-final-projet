@@ -1,8 +1,8 @@
 .hero {
   position: relative;
   width: 100%;
-  height: 300px;
-  min-height: 300px;
+  height: clamp(380px, 32vw, 520px);
+  min-height: 380px;
   display: flex;
   align-items: center;
   overflow: hidden;
@@ -102,6 +102,13 @@
 .hero-cta-ghost:hover { border-color: #fff; background: rgba(0, 0, 0, 0.45); }
 .hero-cta:active,
 .hero-cta-ghost:active { transform: scale(0.96); }
+
+@media (min-width: 641px) and (max-width: 1024px) {
+  .hero {
+    height: 340px;
+    min-height: 340px;
+  }
+}
 
 @media (max-width: 640px) {
   .hero {
