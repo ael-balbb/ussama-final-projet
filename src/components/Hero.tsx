@@ -7,6 +7,35 @@ import './HeroMobileAlignment.css';
 
 const MotionLink = motion.create(Link);
 
+const HERO_TITLE_LINES = [
+  '𝑩𝒊𝒆𝒏𝒗𝒆𝒏𝒖𝒆 𝒄𝒉𝒆𝒛',
+  '𝑵𝒂𝒔𝒓𝒊 𝑷𝒉𝒐𝒏𝒆 𝑺𝒕𝒐𝒓𝒆',
+];
+
+const titleLetterVariants = {
+  hidden: (index: number) => ({
+    opacity: 0,
+    x: ((index % 3) - 1) * 9,
+    y: index % 2 === 0 ? 16 : -12,
+    rotate: index % 2 === 0 ? -8 : 8,
+    scale: 0.68,
+    filter: 'blur(7px)',
+  }),
+  visible: {
+    opacity: 1,
+    x: 0,
+    y: 0,
+    rotate: 0,
+    scale: 1,
+    filter: 'blur(0px)',
+    transition: {
+      type: 'spring' as const,
+      stiffness: 230,
+      damping: 20,
+    },
+  },
+};
+
 const Hero: React.FC = () => {
   const reduceMotion = useReducedMotion();
 
@@ -29,11 +58,32 @@ const Hero: React.FC = () => {
           animate={{ opacity: 1, y: 0 }}
           transition={reduceMotion ? { duration: 0 } : { type: 'spring', stiffness: 170, damping: 24 }}
         >
-          <h1 className="hero-title">
-            Boostez votre{' '}
-            <br />
-            vie numérique
-          </h1>
+          <motion.h1
+            className="hero-title hero-title-animated"
+            aria-label="Bienvenue chez Nasri Phone Store"
+            initial={reduceMotion ? false : 'hidden'}
+            animate="visible"
+            transition={reduceMotion ? { duration: 0 } : { staggerChildren: 0.035, delayChildren: 0.14 }}
+          >
+            {HERO_TITLE_LINES.map((line, lineIndex) => (
+              <span className="hero-title-line" key={line} aria-hidden="true">
+                {Array.from(line).map((character, characterIndex) => {
+                  const animationIndex = lineIndex * 18 + characterIndex;
+                  return (
+                    <motion.span
+                      className={`hero-title-char ${character === ' ' ? 'hero-title-space' : ''}`}
+                      custom={animationIndex}
+                      variants={titleLetterVariants}
+                      style={{ '--char-index': animationIndex } as React.CSSProperties}
+                      key={`${character}-${characterIndex}`}
+                    >
+                      {character === ' ' ? '\u00a0' : character}
+                    </motion.span>
+                  );
+                })}
+              </span>
+            ))}
+          </motion.h1>
 
           <p className="hero-subtitle">
             Découvrez les derniers smartphones, accessoires et objets connectés
