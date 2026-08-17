@@ -1,4 +1,4 @@
-import type { Product } from '../types';
+import type { Product, ProductColor } from '../types';
 
 /**
  * Presentation-only helpers. Everything here is derived deterministically
@@ -51,12 +51,15 @@ export const getBadges = (product: Product): ProductBadge[] => {
   return badges.slice(0, 2);
 };
 
-const REFERENCE_COLOR_FALLBACKS: Record<string, Array<{ name: string; hex: string }>> = {
+type ReferenceColor = { name: string; hex: string; imageIndex?: number };
+
+const REFERENCE_COLOR_FALLBACKS: Record<string, ReferenceColor[]> = {
   'iphone 13 pro': [
-    { name: 'Bleu alpin', hex: '#a8c6e0' },
-    { name: 'Graphite', hex: '#4a4a4a' },
-    { name: 'Argent', hex: '#ededed' },
-    { name: 'Vert alpin', hex: '#6d786b' },
+    // The legacy gallery was uploaded as Or, Vert, Bleu, Argent, Graphite.
+    { name: 'Bleu alpin', hex: '#a8c6e0', imageIndex: 2 },
+    { name: 'Graphite', hex: '#4a4a4a', imageIndex: 4 },
+    { name: 'Argent', hex: '#ededed', imageIndex: 3 },
+    { name: 'Vert alpin', hex: '#6d786b', imageIndex: 1 },
   ],
   'iphone 13 pro max': [
     { name: 'Graphite', hex: '#4a4a4a' },
@@ -77,17 +80,33 @@ const REFERENCE_COLOR_FALLBACKS: Record<string, Array<{ name: string; hex: strin
   ],
 };
 
-export const getAvailableColors = (product: Product) => {
+const getProductGallery = (product: Product) => {
+  const candidates = [...(product.images || []), product.image || '']
+    .filter((image): image is string => Boolean(image?.trim()));
+  return [...new Set(candidates)];
+};
+
+export const getAvailableColors = (product: Product): ProductColor[] => {
+  const gallery = getProductGallery(product);
   const configuredColors = (product.colors || [])
     .filter((color) => color.available !== false && (color.stock ?? product.stock) > 0)
-    .sort((a, b) => (a.sort_order ?? 0) - (b.sort_order ?? 0));
+    .sort((a, b) => (a.sort_order ?? 0) - (b.sort_order ?? 0))
+    .map((color, index) => ({
+      ...color,
+      // Older admin entries can have a color name but no linked photo.
+      // Pair them with the gallery in display order so the swatch still works.
+      image: color.image?.trim() || gallery[index] || gallery[0] || '',
+    }));
 
   if (configuredColors.length > 0) return configuredColors;
 
   const referenceColors = REFERENCE_COLOR_FALLBACKS[product.name.trim().toLowerCase()] || [];
   return referenceColors.map((color, index) => ({
-    ...color,
-    image: product.images?.[0] || product.image || '',
+    name: color.name,
+    hex: color.hex,
+    // Legacy products stored color photos only in `images`. Assign a distinct
+    // gallery photo to each fallback swatch instead of reusing image zero.
+    image: gallery[color.imageIndex ?? index] || gallery[index] || gallery[0] || '',
     stock: product.stock,
     available: product.stock > 0,
     sort_order: index,

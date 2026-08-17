@@ -40,7 +40,10 @@ export default function ProductModal({ product, isOpen, onClose, onAddToCart }: 
   const panelRef = useRef<HTMLDivElement>(null);
   const closeButtonRef = useRef<HTMLButtonElement>(null);
 
-  const colors = getAvailableColors(product).filter((color) => color?.name);
+  const colors = useMemo(
+    () => getAvailableColors(product).filter((color) => color?.name),
+    [product]
+  );
   const images = useMemo(() => {
     const candidates = [
       ...colors.map((color) => color.image),
