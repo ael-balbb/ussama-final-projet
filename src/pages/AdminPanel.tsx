@@ -102,6 +102,8 @@ const AdminPanel: React.FC = () => {
   const [newStorageComparePrice, setNewStorageComparePrice] = useState('');
   const [newStorageStock, setNewStorageStock] = useState('0');
   const [previewStorageIndex, setPreviewStorageIndex] = useState(0);
+  const [productSaveError, setProductSaveError] = useState('');
+  const [isSavingProduct, setIsSavingProduct] = useState(false);
 
   // Filters
   const [searchTerm, setSearchTerm] = useState('');
@@ -165,6 +167,7 @@ const AdminPanel: React.FC = () => {
 
   // ===== PRODUCTS =====
   const openProductModal = (product?: Product) => {
+    setProductSaveError('');
     if (product) {
       setEditingProduct(product);
       setProductForm({
@@ -329,6 +332,8 @@ const AdminPanel: React.FC = () => {
 
   const handleProductSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
+    setProductSaveError('');
+    setIsSavingProduct(true);
     try {
       const colorImages = productForm.colors.map((c) => c.image).filter(Boolean);
       // Prefer color photos first so the storefront card matches the default coloris
@@ -371,7 +376,13 @@ const AdminPanel: React.FC = () => {
       loadData();
     } catch (error) {
       console.error('Error saving product:', error);
-      alert(error instanceof Error ? error.message : 'Erreur lors de la sauvegarde');
+      setProductSaveError(
+        error instanceof Error
+          ? error.message
+          : 'Erreur lors de la sauvegarde. Vos modifications sont conservées dans le formulaire.',
+      );
+    } finally {
+      setIsSavingProduct(false);
     }
   };
 
@@ -1366,12 +1377,36 @@ const AdminPanel: React.FC = () => {
                   </div>
                 )}
 
+                {productSaveError && (
+                  <div className="product-save-error" role="alert">
+                    <AlertCircle size={17} aria-hidden="true" />
+                    <span>
+                      {productSaveError}
+                      <small>Vos coloris et leurs images sont conservés. Réessayez dès que Railway a terminé le déploiement.</small>
+                    </span>
+                    <button
+                      type="button"
+                      onClick={() => setProductSaveError('')}
+                      aria-label="Fermer le message"
+                    >
+                      <X size={15} />
+                    </button>
+                  </div>
+                )}
+
                 <div className="modal-actions">
                   <button type="button" className="btn-cancel" onClick={() => setShowProductModal(false)}>
                     Annuler
                   </button>
-                  <button type="submit" className="btn-save">
-                    <Check size={16} /> {editingProduct ? 'Enregistrer' : 'Créer le produit'}
+                  <button type="submit" className="btn-save" disabled={isSavingProduct}>
+                    {isSavingProduct ? <RefreshCw className="spin" size={16} /> : <Check size={16} />}
+                    {isSavingProduct
+                      ? 'Enregistrement…'
+                      : productSaveError
+                        ? 'Réessayer'
+                        : editingProduct
+                          ? 'Enregistrer'
+                          : 'Créer le produit'}
                   </button>
                 </div>
                 </div>

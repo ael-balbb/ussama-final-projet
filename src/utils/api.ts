@@ -79,7 +79,7 @@ const assertColorsWereSaved = (requested: Partial<Product>, saved: Product) => {
 
   if (!colorsMatch) {
     throw new Error(
-      "Les coloris n'ont pas été enregistrés par le serveur. Mettez à jour le backend Railway, puis réessayez.",
+      "Le serveur n'a pas encore confirmé l'enregistrement des coloris.",
     );
   }
 };
