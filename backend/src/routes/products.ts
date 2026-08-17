@@ -4,6 +4,7 @@ import { authMiddleware } from '../middleware/auth';
 import {
   cleanColors,
   cleanImages,
+  cleanStorageVariants,
   cleanText,
   nonNegativeInteger,
   nonNegativeNumber,
@@ -73,19 +74,25 @@ router.post('/', authMiddleware, async (req: Request, res: Response): Promise<vo
       res.status(400).json({ error: 'Nom, catégorie et prix valides sont requis' });
       return;
     }
-    const price = nonNegativeNumber(req.body.price, 'Le prix');
+    const requestedPrice = nonNegativeNumber(req.body.price, 'Le prix');
     const stock = nonNegativeInteger(req.body.stock ?? 0, 'Le stock');
+    const storageVariants = cleanStorageVariants(req.body.storage_variants, stock);
+    const defaultStorage = storageVariants.find((variant) => variant.available) || storageVariants[0];
+    const price = defaultStorage?.price ?? requestedPrice;
     const payload = {
       name,
       category,
       brand: cleanText(req.body.brand, 80),
       price,
-      compare_at_price: optionalComparePrice(req.body.compare_at_price, price),
+      compare_at_price: defaultStorage
+        ? defaultStorage.compare_at_price
+        : optionalComparePrice(req.body.compare_at_price, price),
       promo_label: cleanText(req.body.promo_label, 32),
       stock,
       description: cleanText(req.body.description, 3000),
       images: cleanImages(req.body.images),
       colors: cleanColors(req.body.colors, stock),
+      storage_variants: storageVariants,
       is_featured: req.body.is_featured === true,
       is_new: req.body.is_new === true,
       is_active: req.body.is_active !== false,
@@ -97,7 +104,7 @@ router.post('/', authMiddleware, async (req: Request, res: Response): Promise<vo
   } catch (error) {
     const message = error instanceof Error ? error.message : 'Erreur lors de la création du produit';
     console.error('Error creating product:', error);
-    const isValidationError = message.includes('doit');
+    const isValidationError = /doit|invalide|existe déjà|requis/.test(message);
     res.status(isValidationError ? 400 : 500).json({
       error: isValidationError ? message : 'Erreur lors de la création du produit',
     });
@@ -108,7 +115,7 @@ router.put('/:id', authMiddleware, async (req: Request, res: Response): Promise<
   try {
     const currentResult = await supabase
       .from('products')
-      .select('price, stock')
+      .select('price, stock, storage_variants')
       .eq('id', req.params.id)
       .maybeSingle();
     if (currentResult.error) throw currentResult.error;
@@ -118,7 +125,7 @@ router.put('/:id', authMiddleware, async (req: Request, res: Response): Promise<
     }
 
     const updateData: Record<string, unknown> = {};
-    const price = req.body.price === undefined
+    let price = req.body.price === undefined
       ? Number(currentResult.data.price)
       : nonNegativeNumber(req.body.price, 'Le prix');
     const stock = req.body.stock === undefined
@@ -145,6 +152,16 @@ router.put('/:id', authMiddleware, async (req: Request, res: Response): Promise<
     if (req.body.description !== undefined) updateData.description = cleanText(req.body.description, 3000);
     if (req.body.images !== undefined) updateData.images = cleanImages(req.body.images);
     if (req.body.colors !== undefined) updateData.colors = cleanColors(req.body.colors, stock);
+    if (req.body.storage_variants !== undefined) {
+      const storageVariants = cleanStorageVariants(req.body.storage_variants, stock);
+      const defaultStorage = storageVariants.find((variant) => variant.available) || storageVariants[0];
+      updateData.storage_variants = storageVariants;
+      if (defaultStorage) {
+        price = defaultStorage.price;
+        updateData.price = defaultStorage.price;
+        updateData.compare_at_price = defaultStorage.compare_at_price;
+      }
+    }
     if (req.body.is_featured !== undefined) updateData.is_featured = req.body.is_featured === true;
     if (req.body.is_new !== undefined) updateData.is_new = req.body.is_new === true;
     if (req.body.is_active !== undefined) updateData.is_active = req.body.is_active === true;
@@ -163,7 +180,7 @@ router.put('/:id', authMiddleware, async (req: Request, res: Response): Promise<
   } catch (error) {
     const message = error instanceof Error ? error.message : 'Erreur lors de la mise à jour du produit';
     console.error('Error updating product:', error);
-    const isValidationError = message.includes('invalide') || message.includes('requis') || message.includes('doit');
+    const isValidationError = /invalide|requis|doit|existe déjà/.test(message);
     res.status(isValidationError ? 400 : 500).json({
       error: isValidationError ? message : 'Erreur lors de la mise à jour du produit',
     });

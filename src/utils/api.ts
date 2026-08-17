@@ -36,6 +36,16 @@ const normalizeProduct = (product: Product): Product => ({
         sort_order: color.sort_order ?? index,
       }))
     : [],
+  storage_variants: Array.isArray(product.storage_variants)
+    ? product.storage_variants.map((variant, index) => ({
+        ...variant,
+        price: Number(variant.price) || Number(product.price) || 0,
+        compare_at_price: variant.compare_at_price == null ? null : Number(variant.compare_at_price),
+        stock: variant.stock == null ? Number(product.stock) || 0 : Number(variant.stock) || 0,
+        available: variant.available !== false,
+        sort_order: variant.sort_order ?? index,
+      }))
+    : [],
   image: product.images?.[0] || product.colors?.[0]?.image || product.image || '',
   is_active: product.is_active !== false,
   is_featured: product.is_featured === true,
@@ -176,6 +186,7 @@ export const submitOrder = async (
         source: item.product.source || (item.product.brand === 'Promo' ? 'pack' : 'product'),
         quantity: item.quantity,
         color: item.selectedColor?.name,
+        storage: item.selectedStorage?.capacity,
       })),
     }),
   });

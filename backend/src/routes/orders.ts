@@ -31,10 +31,11 @@ router.post('/', async (req: Request, res: Response): Promise<void> => {
       const source = value.source === 'pack' ? 'pack' : 'product';
       const quantity = Math.floor(Number(value.quantity));
       const color = cleanText(value.color, 40);
+      const storage = cleanText(value.storage, 20);
       if (!id || !Number.isFinite(quantity) || quantity < 1 || quantity > 20) {
         throw new Error('Un article du panier est invalide');
       }
-      return { id, source, quantity, color };
+      return { id, source, quantity, color, storage };
     });
 
     const { data, error } = await supabase.rpc('place_order', {

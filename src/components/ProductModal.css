@@ -134,6 +134,24 @@
 .quickview-stock.out { color: #cf2634; }
 
 .quickview-colors { margin-top: 13px; display: flex; flex-direction: column; gap: 8px; }
+.quickview-storage { margin-top: 11px; display: flex; flex-direction: column; gap: 7px; }
+.quickview-storage-options { display: flex; flex-wrap: wrap; gap: 8px; }
+.quickview-storage-option {
+  min-width: 62px;
+  min-height: 34px;
+  padding: 0 12px;
+  border: 1px solid #d4d4d8;
+  border-radius: 7px;
+  background: #fff;
+  color: #222;
+  font-size: 12px;
+  font-weight: 650;
+  transition: border-color 150ms ease, background-color 150ms ease, transform 100ms ease;
+}
+.quickview-storage-option:hover { border-color: #9b9ba0; }
+.quickview-storage-option.selected { border-color: var(--primary); background: #fff8dc; box-shadow: 0 0 0 1px var(--primary); }
+.quickview-storage-option:disabled { background: #f3f3f4; color: #aaa; text-decoration: line-through; cursor: not-allowed; }
+.quickview-storage-option:active:not(:disabled) { transform: scale(0.96); }
 .quickview-label { margin-top: 10px; color: #111; font-size: 13px; font-weight: 560; }
 .quickview-label strong { font-weight: 700; }
 .quickview-swatches { display: flex; align-items: center; gap: 14px; }
@@ -241,6 +259,9 @@
   .quickview-prices strong { font-size: 23px; }
   .quickview-stock { margin-top: 6px; }
   .quickview-colors { margin-top: 9px; gap: 6px; }
+  .quickview-storage { margin-top: 8px; gap: 5px; }
+  .quickview-storage-options { gap: 6px; }
+  .quickview-storage-option { min-width: 54px; min-height: 30px; padding-inline: 9px; font-size: 10px; }
   .quickview-swatch { width: 26px; height: 26px; }
   .quickview-swatch.selected { box-shadow: 0 0 0 2px #fff, 0 0 0 4px var(--primary); }
   .quickview-label { margin-top: 7px; }

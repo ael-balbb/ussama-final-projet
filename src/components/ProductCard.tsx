@@ -3,7 +3,13 @@ import { motion, useReducedMotion } from 'framer-motion';
 import { Eye, Heart } from 'lucide-react';
 import type { AddToCartHandler, Product } from '../types';
 import ProductModal from './ProductModal';
-import { formatPrice, getAvailableColors, getBadges, getOriginalPrice } from '../utils/display';
+import {
+  formatPrice,
+  getAvailableColors,
+  getBadges,
+  getOriginalPrice,
+  getStorageVariants,
+} from '../utils/display';
 import './ProductCard.css';
 
 interface ProductCardProps {
@@ -12,20 +18,19 @@ interface ProductCardProps {
   variant?: 'compact' | 'catalog';
 }
 
-const productSubtitle = (product: Product) => {
-  const capacity = product.description?.match(/\b\d+\s?(?:Go|GB|To|TB)\b/i)?.[0];
-  return capacity || product.brand;
-};
-
 export default function ProductCard({ product, onAddToCart, variant = 'compact' }: ProductCardProps) {
   const [isModalOpen, setIsModalOpen] = useState(false);
   const [favorite, setFavorite] = useState(false);
   const reduceMotion = useReducedMotion();
   const badges = getBadges(product);
-  const originalPrice = getOriginalPrice(product);
+  const storageVariants = getStorageVariants(product);
+  const defaultStorage = storageVariants.find((storage) => storage.available !== false) || storageVariants[0];
+  const displayedPrice = defaultStorage?.price ?? product.price;
+  const originalPrice = getOriginalPrice(product, defaultStorage);
   const availableColors = getAvailableColors(product);
   const image = availableColors[0]?.image || product.images?.[0] || product.image || '';
-  const lowStock = product.stock > 0 && product.stock <= 3;
+  const displayedStock = defaultStorage?.stock ?? product.stock;
+  const lowStock = displayedStock > 0 && displayedStock <= 3;
 
   return (
     <>
@@ -59,7 +64,13 @@ export default function ProductCard({ product, onAddToCart, variant = 'compact' 
 
           <div className="product-card-info">
             <h2 className="product-card-name">{product.name}</h2>
-            <span className="product-card-subtitle">{productSubtitle(product)}</span>
+            {storageVariants.length > 0 ? (
+              <span className="product-card-capacities" aria-label="Capacités disponibles">
+                {storageVariants.slice(0, 4).map((storage) => storage.capacity).join(' · ')}
+              </span>
+            ) : (
+              <span className="product-card-subtitle">{product.brand}</span>
+            )}
             {availableColors.length > 0 && (
               <span className="product-card-swatches" aria-label={`${availableColors.length} coloris disponibles`}>
                 {availableColors.slice(0, 4).map((color, index) => (
@@ -72,12 +83,13 @@ export default function ProductCard({ product, onAddToCart, variant = 'compact' 
                 ))}
               </span>
             )}
-            <span className={`product-card-stock ${product.stock <= 0 ? 'out' : lowStock ? 'low' : ''}`}>
+            <span className={`product-card-stock ${displayedStock <= 0 ? 'out' : lowStock ? 'low' : ''}`}>
               <i aria-hidden="true" />
-              {product.stock <= 0 ? 'Épuisé' : lowStock ? `Plus que ${product.stock} en stock` : 'En stock'}
+              {displayedStock <= 0 ? 'Épuisé' : lowStock ? `Plus que ${displayedStock} en stock` : 'En stock'}
             </span>
             <span className="product-card-prices">
-              <strong>{formatPrice(product.price)}</strong>
+              {storageVariants.length > 1 && <small>À partir de</small>}
+              <strong>{formatPrice(displayedPrice)}</strong>
               {originalPrice && <del>{formatPrice(originalPrice)}</del>}
             </span>
           </div>

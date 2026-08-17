@@ -12,7 +12,7 @@ import {
   fetchPacks, createPack, updatePack, deletePack,
   fetchOrders, updateOrderStatus, deleteOrder, uploadImages
 } from '../utils/api';
-import type { Product, Pack, Order, ProductColor } from '../types';
+import type { Product, Pack, Order, ProductColor, ProductStorageVariant } from '../types';
 import './AdminPanel.css';
 
 type Tab = 'overview' | 'products' | 'packs' | 'orders';
@@ -28,6 +28,8 @@ const PRESET_COLORS: { name: string; hex: string }[] = [
   { name: 'Violet', hex: '#5e4b8b' },
 ];
 
+const STORAGE_CAPACITIES = ['64 Go', '128 Go', '256 Go', '512 Go', '1 To', '2 To'];
+
 interface ProductForm {
   name: string;
   category: 'phone' | 'accessory';
@@ -39,6 +41,7 @@ interface ProductForm {
   description: string;
   images: string[];
   colors: ProductColor[];
+  storage_variants: ProductStorageVariant[];
   is_featured: boolean;
   is_new: boolean;
   is_active: boolean;
@@ -60,7 +63,7 @@ interface PackForm {
 
 const emptyProductForm: ProductForm = {
   name: '', category: 'phone', brand: '', price: '', compare_at_price: '', promo_label: '',
-  stock: '', description: '', images: [], colors: [], is_featured: false, is_new: false,
+  stock: '', description: '', images: [], colors: [], storage_variants: [], is_featured: false, is_new: false,
   is_active: true, sort_order: '0'
 };
 
@@ -94,6 +97,11 @@ const AdminPanel: React.FC = () => {
   const [newColorHex, setNewColorHex] = useState(PRESET_COLORS[0].hex);
   const [newColorStock, setNewColorStock] = useState('0');
   const [uploadingColorImage, setUploadingColorImage] = useState(false);
+  const [newStorageCapacity, setNewStorageCapacity] = useState('128 Go');
+  const [newStoragePrice, setNewStoragePrice] = useState('');
+  const [newStorageComparePrice, setNewStorageComparePrice] = useState('');
+  const [newStorageStock, setNewStorageStock] = useState('0');
+  const [previewStorageIndex, setPreviewStorageIndex] = useState(0);
 
   // Filters
   const [searchTerm, setSearchTerm] = useState('');
@@ -170,6 +178,7 @@ const AdminPanel: React.FC = () => {
         description: product.description,
         images: product.images || [],
         colors: product.colors || [],
+        storage_variants: product.storage_variants || [],
         is_featured: product.is_featured === true,
         is_new: product.is_new === true,
         is_active: product.is_active !== false,
@@ -182,6 +191,11 @@ const AdminPanel: React.FC = () => {
     setNewColorName(PRESET_COLORS[0].name);
     setNewColorHex(PRESET_COLORS[0].hex);
     setNewColorStock('0');
+    setNewStorageCapacity('128 Go');
+    setNewStoragePrice(product ? String(product.price) : '');
+    setNewStorageComparePrice('');
+    setNewStorageStock(product ? String(product.stock) : '0');
+    setPreviewStorageIndex(0);
     setShowProductModal(true);
   };
 
@@ -274,6 +288,45 @@ const AdminPanel: React.FC = () => {
     }));
   };
 
+  const addStorageVariant = () => {
+    const price = Number(newStoragePrice);
+    const compareAtPrice = newStorageComparePrice ? Number(newStorageComparePrice) : null;
+    if (!Number.isFinite(price) || price <= 0) {
+      alert('Ajoutez un prix valide pour cette capacité');
+      return;
+    }
+    if (compareAtPrice != null && compareAtPrice <= price) {
+      alert('Le prix avant promo doit être supérieur au prix de cette capacité');
+      return;
+    }
+    if (productForm.storage_variants.some((variant) => variant.capacity === newStorageCapacity)) {
+      alert(`La capacité "${newStorageCapacity}" existe déjà`);
+      return;
+    }
+    setProductForm((prev) => ({
+      ...prev,
+      storage_variants: [...prev.storage_variants, {
+        capacity: newStorageCapacity,
+        price,
+        compare_at_price: compareAtPrice,
+        stock: Math.max(0, Number(newStorageStock) || 0),
+        available: true,
+        sort_order: prev.storage_variants.length,
+      }],
+    }));
+    setNewStoragePrice('');
+    setNewStorageComparePrice('');
+    setNewStorageStock('0');
+  };
+
+  const removeStorageVariant = (index: number) => {
+    setProductForm((prev) => ({
+      ...prev,
+      storage_variants: prev.storage_variants.filter((_, variantIndex) => variantIndex !== index),
+    }));
+    setPreviewStorageIndex(0);
+  };
+
   const handleProductSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
     try {
@@ -286,17 +339,22 @@ const AdminPanel: React.FC = () => {
           ]
         : productForm.images;
 
+      const sortedStorage = [...productForm.storage_variants]
+        .sort((a, b) => (a.sort_order ?? 0) - (b.sort_order ?? 0));
+      const defaultStorage = sortedStorage.find((variant) => variant.available !== false) || sortedStorage[0];
+      const storageStock = sortedStorage.reduce((sum, variant) => sum + Math.max(0, Number(variant.stock) || 0), 0);
       const data = {
         name: productForm.name,
         category: productForm.category,
         brand: productForm.brand,
-        price: Number(productForm.price),
-        compare_at_price: productForm.compare_at_price ? Number(productForm.compare_at_price) : null,
+        price: defaultStorage?.price ?? Number(productForm.price),
+        compare_at_price: defaultStorage?.compare_at_price ?? (productForm.compare_at_price ? Number(productForm.compare_at_price) : null),
         promo_label: productForm.promo_label,
-        stock: Number(productForm.stock),
+        stock: sortedStorage.length > 0 ? storageStock : Number(productForm.stock),
         description: productForm.description,
         images,
         colors: productForm.colors,
+        storage_variants: sortedStorage,
         is_featured: productForm.is_featured,
         is_new: productForm.is_new,
         is_active: productForm.is_active,
@@ -449,6 +507,16 @@ const AdminPanel: React.FC = () => {
     delivered: { label: 'Livrée', color: '#3b82f6', icon: Truck },
     cancelled: { label: 'Annulée', color: '#ef4444', icon: XCircle }
   };
+
+  const previewStorage = productForm.storage_variants[previewStorageIndex];
+  const previewPrice = previewStorage?.price ?? Number(productForm.price || 0);
+  const previewComparePrice = previewStorage
+    ? Number(previewStorage.compare_at_price || 0)
+    : Number(productForm.compare_at_price || 0);
+  const derivedStorageStock = productForm.storage_variants.reduce(
+    (sum, variant) => sum + Math.max(0, Number(variant.stock) || 0),
+    0,
+  );
 
   if (isLoading) {
     return (
@@ -633,6 +701,7 @@ const AdminPanel: React.FC = () => {
                     <th>Prix</th>
                     <th>Promo</th>
                     <th>Stock</th>
+                    <th>Stockage</th>
                     <th>Coloris</th>
                     <th>Statut</th>
                     <th>Actions</th>
@@ -641,7 +710,7 @@ const AdminPanel: React.FC = () => {
                 <tbody>
                   {filteredProducts.length === 0 ? (
                     <tr>
-                      <td colSpan={8} className="empty-table">
+                      <td colSpan={9} className="empty-table">
                         <Package size={40} />
                         <p>Aucun produit trouvé</p>
                       </td>
@@ -680,6 +749,15 @@ const AdminPanel: React.FC = () => {
                         <td>
                           <span className={`stock-badge ${product.stock < 5 ? 'low' : 'ok'}`}>
                             {product.stock}
+                          </span>
+                        </td>
+                        <td>
+                          <span className="table-storage-list">
+                            {(product.storage_variants || []).slice(0, 3).map((variant) => (
+                              <small key={`${product.id}-${variant.capacity}`}>{variant.capacity}</small>
+                            ))}
+                            {(product.storage_variants?.length || 0) > 3 && <small>+{(product.storage_variants?.length || 0) - 3}</small>}
+                            {!product.storage_variants?.length && <span className="table-muted">—</span>}
                           </span>
                         </td>
                         <td>
@@ -855,7 +933,7 @@ const AdminPanel: React.FC = () => {
                           <h4>Produits commandés:</h4>
                           {Array.isArray(order.products_json) && order.products_json.map((item, idx) => (
                             <div key={idx} className="order-item-row">
-                              <span>{item.name}{item.color ? ` · ${item.color}` : ''} ×{item.quantity}</span>
+                              <span>{item.name}{item.storage ? ` · ${item.storage}` : ''}{item.color ? ` · ${item.color}` : ''} ×{item.quantity}</span>
                               <span>{(Number(item.price) * item.quantity).toLocaleString()} DH</span>
                             </div>
                           ))}
@@ -965,25 +1043,27 @@ const AdminPanel: React.FC = () => {
                     </select>
                   </div>
                   <div className="form-group-admin">
-                    <label>Prix (DH) *</label>
+                    <label>{productForm.storage_variants.length > 0 ? 'Prix par défaut (automatique)' : 'Prix (DH) *'}</label>
                     <input
                       type="number"
-                      value={productForm.price}
+                      value={productForm.storage_variants[0]?.price ?? productForm.price}
                       onChange={(e) => setProductForm({ ...productForm, price: e.target.value })}
                       placeholder="0"
                       required
                       min="0"
+                      disabled={productForm.storage_variants.length > 0}
                     />
                   </div>
                   <div className="form-group-admin">
-                    <label>Stock *</label>
+                    <label>{productForm.storage_variants.length > 0 ? 'Stock total (automatique)' : 'Stock *'}</label>
                     <input
                       type="number"
-                      value={productForm.stock}
+                      value={productForm.storage_variants.length > 0 ? derivedStorageStock : productForm.stock}
                       onChange={(e) => setProductForm({ ...productForm, stock: e.target.value })}
                       placeholder="0"
                       required
                       min="0"
+                      disabled={productForm.storage_variants.length > 0}
                     />
                   </div>
                 </div>
@@ -993,10 +1073,13 @@ const AdminPanel: React.FC = () => {
                     <label>Prix avant promo (DH)</label>
                     <input
                       type="number"
-                      value={productForm.compare_at_price}
+                      value={productForm.storage_variants.length > 0
+                        ? (productForm.storage_variants[0].compare_at_price ?? '')
+                        : productForm.compare_at_price}
                       onChange={(e) => setProductForm({ ...productForm, compare_at_price: e.target.value })}
                       placeholder="Laisser vide sans promotion"
                       min="0"
+                      disabled={productForm.storage_variants.length > 0}
                     />
                   </div>
                   <div className="form-group-admin">
@@ -1065,6 +1148,116 @@ const AdminPanel: React.FC = () => {
                     )}
                   </div>
                 </div>
+
+                {productForm.category === 'phone' && (
+                  <div className="form-group-admin storage-admin-section">
+                    <label>Capacités de stockage ({productForm.storage_variants.length}/6)</label>
+                    <p className="form-hint">
+                      Définissez le prix et le stock de chaque capacité. Le prix change automatiquement sur la boutique.
+                    </p>
+
+                    {productForm.storage_variants.length > 0 && (
+                      <div className="storage-admin-list">
+                        {productForm.storage_variants.map((variant, idx) => (
+                          <div key={`${variant.capacity}-${idx}`} className="storage-admin-item">
+                            <GripVertical className="color-drag-handle" size={16} aria-hidden="true" />
+                            <label>
+                              <span>Capacité</span>
+                              <select
+                                value={variant.capacity}
+                                onChange={(e) => setProductForm((prev) => ({
+                                  ...prev,
+                                  storage_variants: prev.storage_variants.map((item, variantIndex) => variantIndex === idx
+                                    ? { ...item, capacity: e.target.value }
+                                    : item),
+                                }))}
+                              >
+                                {STORAGE_CAPACITIES.map((capacity) => <option key={capacity}>{capacity}</option>)}
+                              </select>
+                            </label>
+                            <label>
+                              <span>Prix (DH)</span>
+                              <input
+                                type="number"
+                                min="0"
+                                value={variant.price}
+                                onChange={(e) => setProductForm((prev) => ({
+                                  ...prev,
+                                  storage_variants: prev.storage_variants.map((item, variantIndex) => variantIndex === idx
+                                    ? { ...item, price: Math.max(0, Number(e.target.value) || 0) }
+                                    : item),
+                                }))}
+                              />
+                            </label>
+                            <label>
+                              <span>Avant promo</span>
+                              <input
+                                type="number"
+                                min="0"
+                                value={variant.compare_at_price ?? ''}
+                                onChange={(e) => setProductForm((prev) => ({
+                                  ...prev,
+                                  storage_variants: prev.storage_variants.map((item, variantIndex) => variantIndex === idx
+                                    ? { ...item, compare_at_price: e.target.value ? Number(e.target.value) : null }
+                                    : item),
+                                }))}
+                              />
+                            </label>
+                            <label>
+                              <span>Stock</span>
+                              <input
+                                type="number"
+                                min="0"
+                                value={variant.stock ?? 0}
+                                onChange={(e) => setProductForm((prev) => ({
+                                  ...prev,
+                                  storage_variants: prev.storage_variants.map((item, variantIndex) => variantIndex === idx
+                                    ? { ...item, stock: Math.max(0, Number(e.target.value) || 0) }
+                                    : item),
+                                }))}
+                              />
+                            </label>
+                            <label className="color-availability">
+                              <input
+                                type="checkbox"
+                                checked={variant.available !== false}
+                                onChange={(e) => setProductForm((prev) => ({
+                                  ...prev,
+                                  storage_variants: prev.storage_variants.map((item, variantIndex) => variantIndex === idx
+                                    ? { ...item, available: e.target.checked }
+                                    : item),
+                                }))}
+                              />
+                              Disponible
+                            </label>
+                            <button
+                              type="button"
+                              className="remove-image-btn"
+                              onClick={() => removeStorageVariant(idx)}
+                              aria-label={`Supprimer ${variant.capacity}`}
+                            >
+                              <X size={14} />
+                            </button>
+                          </div>
+                        ))}
+                      </div>
+                    )}
+
+                    {productForm.storage_variants.length < 6 && (
+                      <div className="storage-add-row">
+                        <select value={newStorageCapacity} onChange={(e) => setNewStorageCapacity(e.target.value)} aria-label="Nouvelle capacité">
+                          {STORAGE_CAPACITIES.map((capacity) => <option key={capacity}>{capacity}</option>)}
+                        </select>
+                        <input type="number" min="0" value={newStoragePrice} onChange={(e) => setNewStoragePrice(e.target.value)} placeholder="Prix DH" aria-label="Prix de la capacité" />
+                        <input type="number" min="0" value={newStorageComparePrice} onChange={(e) => setNewStorageComparePrice(e.target.value)} placeholder="Avant promo" aria-label="Prix avant promo de la capacité" />
+                        <input type="number" min="0" value={newStorageStock} onChange={(e) => setNewStorageStock(e.target.value)} placeholder="Stock" aria-label="Stock de la capacité" />
+                        <button type="button" className="storage-add-btn" onClick={addStorageVariant}>
+                          <Plus size={15} /> Ajouter
+                        </button>
+                      </div>
+                    )}
+                  </div>
+                )}
 
                 {productForm.category === 'phone' && (
                   <div className="form-group-admin">
@@ -1199,13 +1392,27 @@ const AdminPanel: React.FC = () => {
                         <i key={`${color.hex}-${index}`} className={index === 0 ? 'selected' : ''} style={{ backgroundColor: color.hex }} />
                       ))}
                     </div>
-                    <span className={`preview-stock ${Number(productForm.stock) > 0 ? 'available' : ''}`}>
-                      {Number(productForm.stock) > 0 ? 'En stock' : 'Rupture de stock'}
+                    {productForm.storage_variants.length > 0 && (
+                      <div className="preview-storage-options">
+                        {productForm.storage_variants.map((variant, index) => (
+                          <button
+                            key={`${variant.capacity}-${index}`}
+                            type="button"
+                            className={previewStorageIndex === index ? 'selected' : ''}
+                            onClick={() => setPreviewStorageIndex(index)}
+                          >
+                            {variant.capacity}
+                          </button>
+                        ))}
+                      </div>
+                    )}
+                    <span className={`preview-stock ${Number(previewStorage?.stock ?? productForm.stock) > 0 ? 'available' : ''}`}>
+                      {Number(previewStorage?.stock ?? productForm.stock) > 0 ? 'En stock' : 'Rupture de stock'}
                     </span>
                     <div className="preview-price">
-                      <strong>{Number(productForm.price || 0).toLocaleString()} DH</strong>
-                      {Number(productForm.compare_at_price) > Number(productForm.price) && (
-                        <del>{Number(productForm.compare_at_price).toLocaleString()} DH</del>
+                      <strong>{Number(previewPrice || 0).toLocaleString()} DH</strong>
+                      {Number(previewComparePrice) > Number(previewPrice) && (
+                        <del>{Number(previewComparePrice).toLocaleString()} DH</del>
                       )}
                     </div>
                     {productForm.promo_label && <span className="preview-promo">{productForm.promo_label}</span>}

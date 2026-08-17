@@ -1899,6 +1899,23 @@
   font-size: 8px;
 }
 
+.table-storage-list {
+  display: inline-flex;
+  align-items: center;
+  gap: 4px;
+  white-space: nowrap;
+}
+
+.table-storage-list small {
+  padding: 3px 5px;
+  border: 1px solid #dedede;
+  border-radius: 4px;
+  background: #fafafa;
+  color: #444;
+  font-size: 8px;
+  font-weight: 600;
+}
+
 .table-muted {
   color: #a4a4a4;
 }
@@ -2100,6 +2117,12 @@
   box-shadow: 0 0 0 2px rgba(245, 199, 64, 0.14);
 }
 
+.form-group-admin input:disabled {
+  background: #f5f5f6;
+  color: #777;
+  cursor: not-allowed;
+}
+
 .form-switches {
   display: grid;
   padding: 0;
@@ -2242,6 +2265,72 @@
   height: 34px;
 }
 
+.storage-admin-list {
+  overflow: hidden;
+  border: 1px solid #ededed;
+  border-radius: 5px;
+}
+
+.storage-admin-item {
+  min-height: 54px;
+  padding: 6px 7px;
+  display: grid;
+  grid-template-columns: 14px repeat(4, minmax(64px, 1fr)) 78px 24px;
+  align-items: end;
+  gap: 7px;
+  border-bottom: 1px solid #ededed;
+  background: #fff;
+}
+
+.storage-admin-item:last-child { border-bottom: 0; }
+
+.storage-admin-item > label:not(.color-availability) {
+  min-width: 0;
+  display: grid;
+  gap: 3px;
+  color: #777;
+  font-size: 8px;
+}
+
+.storage-admin-item select,
+.storage-admin-item input,
+.storage-add-row select,
+.storage-add-row input {
+  width: 100%;
+  min-width: 0;
+  min-height: 30px;
+  padding: 0 7px;
+  border: 1px solid #dedede;
+  border-radius: 4px;
+  background: #fff;
+  color: #222;
+  font-size: 9px;
+}
+
+.storage-admin-item .color-availability { align-self: center; }
+.storage-admin-item .remove-image-btn { position: static; align-self: center; }
+
+.storage-add-row {
+  margin-top: 9px;
+  display: grid;
+  grid-template-columns: 92px repeat(3, minmax(72px, 1fr)) 92px;
+  gap: 7px;
+}
+
+.storage-add-btn {
+  min-height: 32px;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  gap: 5px;
+  border: 1px solid #d7b02c;
+  border-radius: 4px;
+  background: #ffda63;
+  color: #171717;
+  font-size: 9px;
+  font-weight: 650;
+}
+
 .admin-product-editor-form .modal-actions {
   position: absolute;
   right: 235px;
@@ -2336,6 +2425,30 @@
 .preview-swatches i.selected {
   outline: 2px solid var(--admin-yellow);
   outline-offset: 2px;
+}
+
+.preview-storage-options {
+  margin: 6px 0 4px;
+  display: flex;
+  flex-wrap: wrap;
+  gap: 5px;
+}
+
+.preview-storage-options button {
+  min-height: 24px;
+  padding: 0 7px;
+  border: 1px solid #dedede;
+  border-radius: 4px;
+  background: #fff;
+  color: #333;
+  font-size: 8px;
+  font-weight: 600;
+}
+
+.preview-storage-options button.selected {
+  border-color: var(--admin-yellow);
+  background: #fff8dd;
+  box-shadow: 0 0 0 1px var(--admin-yellow);
 }
 
 .preview-stock {
@@ -2571,4 +2684,24 @@
   .color-availability {
     grid-column: 4 / -1;
   }
+
+  .storage-admin-item {
+    grid-template-columns: 14px repeat(2, minmax(0, 1fr)) 24px;
+    align-items: end;
+  }
+
+  .storage-admin-item > label:nth-of-type(3),
+  .storage-admin-item > label:nth-of-type(4) {
+    grid-column: span 1;
+  }
+
+  .storage-admin-item .color-availability {
+    grid-column: 2 / -1;
+  }
+
+  .storage-add-row {
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+  }
+
+  .storage-add-btn { grid-column: 1 / -1; }
 }

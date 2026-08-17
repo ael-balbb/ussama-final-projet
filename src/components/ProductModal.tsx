@@ -14,7 +14,7 @@ import {
   X,
 } from 'lucide-react';
 import type { AddToCartHandler, Product } from '../types';
-import { formatPrice, getAvailableColors, getBadges, getOriginalPrice } from '../utils/display';
+import { formatPrice, getAvailableColors, getBadges, getOriginalPrice, getStorageVariants } from '../utils/display';
 import { getVariantStock } from '../utils/cart';
 import './ProductModal.css';
 
@@ -26,13 +26,13 @@ interface ProductModalProps {
 }
 
 const productSubtitle = (product: Product) => {
-  const capacity = product.description?.match(/\b\d+\s?(?:Go|GB|To|TB)\b/i)?.[0];
-  return capacity || product.brand;
+  return product.brand;
 };
 
 export default function ProductModal({ product, isOpen, onClose, onAddToCart }: ProductModalProps) {
   const [currentImageIndex, setCurrentImageIndex] = useState(0);
   const [selectedColor, setSelectedColor] = useState(0);
+  const [selectedStorage, setSelectedStorage] = useState(0);
   const [quantity, setQuantity] = useState(1);
   const [favorite, setFavorite] = useState(false);
   const [brokenImages, setBrokenImages] = useState<Record<number, boolean>>({});
@@ -44,6 +44,7 @@ export default function ProductModal({ product, isOpen, onClose, onAddToCart }: 
     () => getAvailableColors(product).filter((color) => color?.name),
     [product]
   );
+  const storageVariants = useMemo(() => getStorageVariants(product), [product]);
   const images = useMemo(() => {
     const candidates = [
       ...colors.map((color) => color.image),
@@ -53,14 +54,17 @@ export default function ProductModal({ product, isOpen, onClose, onAddToCart }: 
     return [...new Set(candidates)];
   }, [colors, product.image, product.images]);
   const badges = getBadges(product);
-  const originalPrice = getOriginalPrice(product);
-  const selectedStock = getVariantStock(product.stock, colors[selectedColor]);
-  const savings = originalPrice ? originalPrice - product.price : 0;
+  const selectedStorageVariant = storageVariants[selectedStorage];
+  const selectedPrice = selectedStorageVariant?.price ?? product.price;
+  const originalPrice = getOriginalPrice(product, selectedStorageVariant);
+  const selectedStock = getVariantStock(product.stock, colors[selectedColor], selectedStorageVariant);
+  const savings = originalPrice ? originalPrice - selectedPrice : 0;
   const savingsPercent = originalPrice ? Math.round((savings / originalPrice) * 100) : 0;
 
   const close = useCallback(() => {
     setCurrentImageIndex(0);
     setSelectedColor(0);
+    setSelectedStorage(0);
     setQuantity(1);
     setBrokenImages({});
     onClose();
@@ -139,6 +143,11 @@ export default function ProductModal({ product, isOpen, onClose, onAddToCart }: 
     if (imageIndex >= 0) setCurrentImageIndex(imageIndex);
   };
 
+  const selectStorage = (index: number) => {
+    setSelectedStorage(index);
+    setQuantity(1);
+  };
+
   return createPortal(
     <AnimatePresence>
       {isOpen && (
@@ -208,13 +217,36 @@ export default function ProductModal({ product, isOpen, onClose, onAddToCart }: 
               <h2 className="quickview-title">{product.name}</h2>
               <p className="quickview-subtitle">{productSubtitle(product)}</p>
               <div className="quickview-prices">
-                <strong>{formatPrice(product.price)}</strong>
+                <strong>{formatPrice(selectedPrice)}</strong>
                 {originalPrice && <del>{formatPrice(originalPrice)}</del>}
               </div>
               {savings > 0 && <p className="quickview-savings">Économisez {formatPrice(savings)} ({savingsPercent}%)</p>}
               <p className={`quickview-stock ${selectedStock <= 0 ? 'out' : ''}`}>
                 <i aria-hidden="true" />{selectedStock > 0 ? 'En stock' : 'Épuisé'}
               </p>
+
+              {storageVariants.length > 0 && (
+                <div className="quickview-storage">
+                  <span className="quickview-label">Capacité : <strong>{selectedStorageVariant?.capacity}</strong></span>
+                  <div className="quickview-storage-options" aria-label="Capacité de stockage">
+                    {storageVariants.map((variant, index) => {
+                      const variantStock = getVariantStock(product.stock, colors[selectedColor], variant);
+                      return (
+                        <button
+                          key={`${variant.capacity}-${index}`}
+                          type="button"
+                          className={`quickview-storage-option ${selectedStorage === index ? 'selected' : ''}`}
+                          onClick={() => selectStorage(index)}
+                          disabled={variantStock <= 0}
+                          aria-pressed={selectedStorage === index}
+                        >
+                          {variant.capacity}
+                        </button>
+                      );
+                    })}
+                  </div>
+                </div>
+              )}
 
               {colors.length > 0 && (
                 <div className="quickview-colors">
@@ -248,7 +280,7 @@ export default function ProductModal({ product, isOpen, onClose, onAddToCart }: 
                   className="quickview-add-btn"
                   disabled={selectedStock <= 0}
                   onClick={() => {
-                    onAddToCart(product, colors[selectedColor], quantity);
+                    onAddToCart(product, colors[selectedColor], quantity, selectedStorageVariant);
                     close();
                   }}
                 >

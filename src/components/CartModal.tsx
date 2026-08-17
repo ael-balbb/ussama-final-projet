@@ -2,7 +2,7 @@ import React from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
 import { X, Plus, Minus, Trash2, ShoppingBag } from 'lucide-react';
 import type { CartItem } from '../types';
-import { getCartItemKey, getVariantStock } from '../utils/cart';
+import { getCartItemKey, getCartItemPrice, getVariantStock } from '../utils/cart';
 import { formatPrice } from '../utils/display';
 import './CartModal.css';
 
@@ -24,7 +24,7 @@ const CartModal: React.FC<CartModalProps> = ({
   onCheckout,
 }) => {
   const total = cartItems.reduce(
-    (sum, item) => sum + item.product.price * item.quantity,
+    (sum, item) => sum + getCartItemPrice(item) * item.quantity,
     0
   );
 
@@ -89,8 +89,11 @@ const CartModal: React.FC<CartModalProps> = ({
                       {item.selectedColor && (
                         <p className="cart-item-color">Coloris : {item.selectedColor.name}</p>
                       )}
+                      {item.selectedStorage && (
+                        <p className="cart-item-color">Capacité : {item.selectedStorage.capacity}</p>
+                      )}
                       <p className="cart-item-price">
-                        {formatPrice(item.product.price)}
+                        {formatPrice(getCartItemPrice(item))}
                       </p>
                       <div className="quantity-controls">
                         <motion.button
@@ -113,7 +116,7 @@ const CartModal: React.FC<CartModalProps> = ({
                           onClick={() =>
                             onUpdateQuantity(getCartItemKey(item), item.quantity + 1)
                           }
-                          disabled={item.quantity >= getVariantStock(item.product.stock, item.selectedColor)}
+                          disabled={item.quantity >= getVariantStock(item.product.stock, item.selectedColor, item.selectedStorage)}
                         >
                           <Plus size={16} />
                         </motion.button>
@@ -121,7 +124,7 @@ const CartModal: React.FC<CartModalProps> = ({
                     </div>
                     <div className="cart-item-actions">
                       <div className="cart-item-total">
-                        {formatPrice(item.product.price * item.quantity)}
+                        {formatPrice(getCartItemPrice(item) * item.quantity)}
                       </div>
                       <motion.button
                         type="button"

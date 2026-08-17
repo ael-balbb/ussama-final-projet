@@ -5,7 +5,7 @@ import { Send, CheckCircle, ArrowLeft } from 'lucide-react';
 import Footer from '../components/Footer';
 import type { OrderForm, CartItem } from '../types';
 import { submitOrder } from '../utils/api';
-import { getCartItemKey } from '../utils/cart';
+import { getCartItemKey, getCartItemPrice } from '../utils/cart';
 import './CheckoutPage.css';
 
 const moroccoCities = [
@@ -77,7 +77,7 @@ const CheckoutPage: React.FC = () => {
   }, [cartItems.length, navigate]);
 
   const total = cartItems.reduce(
-    (sum, item) => sum + item.product.price * item.quantity,
+    (sum, item) => sum + getCartItemPrice(item) * item.quantity,
     0
   );
 
@@ -265,10 +265,11 @@ const CheckoutPage: React.FC = () => {
                   <div key={getCartItemKey(item)} className="summary-item">
                     <span>
                       {item.product.name}
+                      {item.selectedStorage ? ` · ${item.selectedStorage.capacity}` : ''}
                       {item.selectedColor ? ` · ${item.selectedColor.name}` : ''} ×{item.quantity}
                     </span>
                     <span className="item-price">
-                      {(item.product.price * item.quantity).toLocaleString()} DH
+                      {(getCartItemPrice(item) * item.quantity).toLocaleString()} DH
                     </span>
                   </div>
                 ))}

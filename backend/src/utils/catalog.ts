@@ -7,6 +7,15 @@ export interface CatalogColor {
   sort_order: number;
 }
 
+export interface CatalogStorageVariant {
+  capacity: string;
+  price: number;
+  compare_at_price: number | null;
+  stock: number;
+  available: boolean;
+  sort_order: number;
+}
+
 export const cleanText = (value: unknown, maxLength: number) =>
   typeof value === 'string' ? value.trim().slice(0, maxLength) : '';
 
@@ -63,6 +72,41 @@ export const cleanColors = (value: unknown, fallbackStock: number): CatalogColor
       sort_order: color.sort_order == null ? index : nonNegativeInteger(color.sort_order, `Ordre ${name}`),
     }];
   });
+};
+
+export const cleanStorageVariants = (
+  value: unknown,
+  fallbackStock: number,
+): CatalogStorageVariant[] => {
+  if (!Array.isArray(value)) return [];
+  const seen = new Set<string>();
+  return value.slice(0, 8).flatMap((entry, index) => {
+    if (!entry || typeof entry !== 'object') return [];
+    const variant = entry as Record<string, unknown>;
+    const rawCapacity = cleanText(variant.capacity, 20);
+    const capacityMatch = rawCapacity.match(/^(\d{1,4})\s*(go|gb|to|tb)$/i);
+    if (!capacityMatch) throw new Error(`La capacité "${rawCapacity}" est invalide`);
+    const unit = /^(to|tb)$/i.test(capacityMatch[2]) ? 'To' : 'Go';
+    const capacity = `${capacityMatch[1]} ${unit}`;
+    const capacityKey = capacity.toLowerCase();
+    if (seen.has(capacityKey)) throw new Error(`La capacité "${capacity}" existe déjà`);
+    seen.add(capacityKey);
+
+    const price = nonNegativeNumber(variant.price, `Le prix ${capacity}`);
+    if (price <= 0) throw new Error(`Le prix ${capacity} doit être supérieur à zéro`);
+    return [{
+      capacity,
+      price,
+      compare_at_price: optionalComparePrice(variant.compare_at_price, price),
+      stock: variant.stock == null
+        ? fallbackStock
+        : nonNegativeInteger(variant.stock, `Stock ${capacity}`),
+      available: variant.available !== false,
+      sort_order: variant.sort_order == null
+        ? index
+        : nonNegativeInteger(variant.sort_order, `Ordre ${capacity}`),
+    }];
+  }).sort((a, b) => a.sort_order - b.sort_order);
 };
 
 export const publicCatalogOrder = [

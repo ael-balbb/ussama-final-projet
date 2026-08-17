@@ -1,4 +1,4 @@
-import type { Product, ProductColor } from '../types';
+import type { Product, ProductColor, ProductStorageVariant } from '../types';
 
 /**
  * Presentation-only helpers. Everything here is derived deterministically
@@ -10,19 +10,56 @@ export const formatPrice = (price: number): string => {
   return `${Math.round(price).toString().replace(/\B(?=(\d{3})+(?!\d))/g, ' ')} DH`;
 };
 
+const CAPACITY_PATTERN = /\b(\d{1,4})\s*(go|gb|to|tb)\b/i;
+
+export const getStorageVariants = (product: Product): ProductStorageVariant[] => {
+  const configured = (product.storage_variants || [])
+    .filter((variant) => variant.available !== false && variant.capacity?.trim())
+    .map((variant, index) => ({
+      ...variant,
+      price: Number(variant.price) || product.price,
+      compare_at_price: variant.compare_at_price == null ? null : Number(variant.compare_at_price),
+      stock: variant.stock == null ? product.stock : Number(variant.stock) || 0,
+      sort_order: variant.sort_order ?? index,
+    }))
+    .sort((a, b) => (a.sort_order ?? 0) - (b.sort_order ?? 0));
+
+  if (configured.length > 0) return configured;
+
+  const match = product.description?.match(CAPACITY_PATTERN);
+  if (!match) return [];
+  const unit = /^(to|tb)$/i.test(match[2]) ? 'To' : 'Go';
+  return [{
+    capacity: `${match[1]} ${unit}`,
+    price: product.price,
+    compare_at_price: product.compare_at_price,
+    stock: product.stock,
+    available: product.stock > 0,
+    sort_order: 0,
+  }];
+};
+
+export const getDefaultStorageVariant = (product: Product) => {
+  const variants = getStorageVariants(product);
+  return variants.find((variant) => (variant.stock ?? product.stock) > 0) || variants[0];
+};
+
 export const isNewProduct = (product: Product): boolean => {
   return product.is_new === true;
 };
 
 export const getPromoPercent = (product: Product): number | null => {
-  const originalPrice = getOriginalPrice(product);
-  if (!originalPrice || !product.price) return null;
-  return Math.round(((originalPrice - product.price) / originalPrice) * 100);
+  const storage = getDefaultStorageVariant(product);
+  const price = storage?.price ?? product.price;
+  const originalPrice = getOriginalPrice(product, storage);
+  if (!originalPrice || !price) return null;
+  return Math.round(((originalPrice - price) / originalPrice) * 100);
 };
 
-export const getOriginalPrice = (product: Product): number | null => {
-  const compareAtPrice = Number(product.compare_at_price);
-  return Number.isFinite(compareAtPrice) && compareAtPrice > product.price
+export const getOriginalPrice = (product: Product, storage?: ProductStorageVariant): number | null => {
+  const price = storage?.price ?? product.price;
+  const compareAtPrice = Number(storage?.compare_at_price ?? product.compare_at_price);
+  return Number.isFinite(compareAtPrice) && compareAtPrice > price
     ? compareAtPrice
     : null;
 };

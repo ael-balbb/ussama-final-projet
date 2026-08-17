@@ -3,7 +3,7 @@ import { motion } from 'framer-motion';
 import { X, Send, CheckCircle } from 'lucide-react';
 import type { OrderForm, CartItem } from '../types';
 import { submitOrder } from '../utils/api';
-import { getCartItemKey } from '../utils/cart';
+import { getCartItemKey, getCartItemPrice } from '../utils/cart';
 import './CheckoutModal.css';
 
 interface CheckoutModalProps {
@@ -65,7 +65,7 @@ const CheckoutModal: React.FC<CheckoutModalProps> = ({
   const [errors, setErrors] = useState<Partial<OrderForm>>({});
 
   const total = cartItems.reduce(
-    (sum, item) => sum + item.product.price * item.quantity,
+    (sum, item) => sum + getCartItemPrice(item) * item.quantity,
     0
   );
 
@@ -275,10 +275,11 @@ const CheckoutModal: React.FC<CheckoutModalProps> = ({
                   <div key={getCartItemKey(item)} className="summary-item">
                     <span>
                       {item.product.name}
+                      {item.selectedStorage ? ` · ${item.selectedStorage.capacity}` : ''}
                       {item.selectedColor ? ` · ${item.selectedColor.name}` : ''} ×{item.quantity}
                     </span>
                     <span>
-                      {(item.product.price * item.quantity).toLocaleString('fr-MA')} DH
+                      {(getCartItemPrice(item) * item.quantity).toLocaleString('fr-MA')} DH
                     </span>
                   </div>
                 ))}

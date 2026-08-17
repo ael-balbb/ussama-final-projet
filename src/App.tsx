@@ -10,7 +10,7 @@ import NewArrivals from './components/NewArrivals';
 import CartModal from './components/CartModal';
 import Footer from './components/Footer';
 import CatalogPage from './pages/CatalogPage';
-import type { CartItem, Pack, Product, ProductColor } from './types';
+import type { CartItem, Pack, Product, ProductColor, ProductStorageVariant } from './types';
 import { fetchPacks, fetchProducts } from './utils/api';
 import { getCartItemKey, getVariantStock } from './utils/cart';
 import './App.css';
@@ -43,7 +43,7 @@ export interface StorefrontProps {
   packs: Pack[];
   status: 'loading' | 'ready' | 'error';
   cartItems: CartItem[];
-  addToCart: (product: Product, selectedColor?: ProductColor, quantity?: number) => void;
+  addToCart: (product: Product, selectedColor?: ProductColor, quantity?: number, selectedStorage?: ProductStorageVariant) => void;
   updateQuantity: (itemKey: string, quantity: number) => void;
   removeItem: (itemKey: string) => void;
 }
@@ -122,10 +122,15 @@ function App() {
     localStorage.setItem('cart', JSON.stringify(cartItems));
   }, [cartItems]);
 
-  const addToCart = (product: Product, selectedColor?: ProductColor, quantity = 1) => {
+  const addToCart = (
+    product: Product,
+    selectedColor?: ProductColor,
+    quantity = 1,
+    selectedStorage?: ProductStorageVariant,
+  ) => {
     setCartItems((current) => {
-      const itemKey = getCartItemKey({ product, selectedColor });
-      const maximum = getVariantStock(product.stock, selectedColor);
+      const itemKey = getCartItemKey({ product, selectedColor, selectedStorage });
+      const maximum = getVariantStock(product.stock, selectedColor, selectedStorage);
       if (maximum <= 0) return current;
       const existing = current.find((item) => getCartItemKey(item) === itemKey);
       if (existing) {
@@ -135,7 +140,7 @@ function App() {
             : item
         );
       }
-      return [...current, { product, selectedColor, quantity: Math.min(maximum, quantity) }];
+      return [...current, { product, selectedColor, selectedStorage, quantity: Math.min(maximum, quantity) }];
     });
   };
 
@@ -153,7 +158,7 @@ function App() {
         getCartItemKey(item) === itemKey
           ? {
               ...item,
-              quantity: Math.min(getVariantStock(item.product.stock, item.selectedColor), quantity),
+              quantity: Math.min(getVariantStock(item.product.stock, item.selectedColor, item.selectedStorage), quantity),
             }
           : item
       )

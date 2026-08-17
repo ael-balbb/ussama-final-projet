@@ -7,6 +7,15 @@ export interface ProductColor {
   sort_order?: number;
 }
 
+export interface ProductStorageVariant {
+  capacity: string;
+  price: number;
+  compare_at_price?: number | null;
+  stock?: number;
+  available?: boolean;
+  sort_order?: number;
+}
+
 export interface Product {
   id: string;
   source?: 'product' | 'pack';
@@ -20,6 +29,8 @@ export interface Product {
   images: string[];
   /** Optional color variants — each with its own product photo */
   colors?: ProductColor[];
+  /** Storage capacities — each can carry its own price and stock */
+  storage_variants?: ProductStorageVariant[];
   description: string;
   stock: number;
   is_featured?: boolean;
@@ -50,12 +61,14 @@ export interface CartItem {
   product: Product;
   quantity: number;
   selectedColor?: ProductColor;
+  selectedStorage?: ProductStorageVariant;
 }
 
 export type AddToCartHandler = (
   product: Product,
   selectedColor?: ProductColor,
-  quantity?: number
+  quantity?: number,
+  selectedStorage?: ProductStorageVariant,
 ) => void;
 
 export interface OrderForm {
@@ -88,6 +101,7 @@ export interface CartItemJSON {
   quantity: number;
   image?: string;
   color?: string;
+  storage?: string;
 }
 
 export interface CartOrderItem {
@@ -95,6 +109,7 @@ export interface CartOrderItem {
   source: 'product' | 'pack';
   quantity: number;
   color?: string;
+  storage?: string;
 }
 
 export interface Cart {
