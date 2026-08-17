@@ -1,6 +1,6 @@
-import { useMemo, useState } from 'react';
+import { useEffect, useId, useMemo, useRef, useState } from 'react';
 import { AnimatePresence, motion, useReducedMotion } from 'framer-motion';
-import { ChevronRight, Search } from 'lucide-react';
+import { Check, ChevronDown, ChevronRight, Search } from 'lucide-react';
 import { Link } from 'react-router-dom';
 import type { AddToCartHandler, Product } from '../types';
 import ProductCard from './ProductCard';
@@ -40,12 +40,35 @@ export default function NewArrivals({
   const [activeTab, setActiveTab] = useState<TabKey>(initialTab);
   const [query, setQuery] = useState('');
   const [brand, setBrand] = useState('all');
+  const [isBrandMenuOpen, setIsBrandMenuOpen] = useState(false);
+  const brandMenuRef = useRef<HTMLDivElement>(null);
+  const brandMenuId = useId();
   const reduceMotion = useReducedMotion();
 
   const brands = useMemo(
     () => [...new Set(products.map((product) => product.brand).filter(Boolean))].sort(),
     [products]
   );
+
+  useEffect(() => {
+    if (!isBrandMenuOpen) return;
+
+    const closeOnOutsideClick = (event: PointerEvent) => {
+      if (!brandMenuRef.current?.contains(event.target as Node)) {
+        setIsBrandMenuOpen(false);
+      }
+    };
+    const closeOnEscape = (event: KeyboardEvent) => {
+      if (event.key === 'Escape') setIsBrandMenuOpen(false);
+    };
+
+    document.addEventListener('pointerdown', closeOnOutsideClick);
+    document.addEventListener('keydown', closeOnEscape);
+    return () => {
+      document.removeEventListener('pointerdown', closeOnOutsideClick);
+      document.removeEventListener('keydown', closeOnEscape);
+    };
+  }, [isBrandMenuOpen]);
 
   const visibleProducts = useMemo(() => {
     const normalizedQuery = query.trim().toLowerCase();
@@ -116,6 +139,7 @@ export default function NewArrivals({
                 onClick={() => {
                   setActiveTab(tab.key);
                   setBrand('all');
+                  setIsBrandMenuOpen(false);
                 }}
               >
                 {tab.label}
@@ -123,13 +147,55 @@ export default function NewArrivals({
             ))}
           </div>
 
-          <label className="catalog-brand-select">
-            <span className="sr-only">Filtrer par marque</span>
-            <select value={brand} onChange={(event) => setBrand(event.target.value)}>
-              <option value="all">Toutes les marques</option>
-              {brands.map((item) => <option key={item} value={item}>{item}</option>)}
-            </select>
-          </label>
+          <div className="catalog-brand-select" ref={brandMenuRef}>
+            <button
+              type="button"
+              className={`catalog-brand-trigger ${isBrandMenuOpen ? 'open' : ''}`}
+              aria-haspopup="listbox"
+              aria-expanded={isBrandMenuOpen}
+              aria-controls={brandMenuId}
+              onClick={() => setIsBrandMenuOpen((current) => !current)}
+            >
+              <span>{brand === 'all' ? 'Toutes les marques' : brand}</span>
+              <ChevronDown size={19} strokeWidth={2} aria-hidden="true" />
+            </button>
+
+            <AnimatePresence>
+              {isBrandMenuOpen && (
+                <motion.div
+                  id={brandMenuId}
+                  className="catalog-brand-menu"
+                  role="listbox"
+                  aria-label="Filtrer par marque"
+                  initial={reduceMotion ? false : { opacity: 0, y: -6, scale: 0.98 }}
+                  animate={{ opacity: 1, y: 0, scale: 1 }}
+                  exit={reduceMotion ? { opacity: 0 } : { opacity: 0, y: -4, scale: 0.98 }}
+                  transition={{ duration: reduceMotion ? 0 : 0.16, ease: 'easeOut' }}
+                >
+                  {['all', ...brands].map((item) => {
+                    const isSelected = brand === item;
+                    const label = item === 'all' ? 'Toutes les marques' : item;
+                    return (
+                      <button
+                        key={item}
+                        type="button"
+                        role="option"
+                        aria-selected={isSelected}
+                        className={isSelected ? 'selected' : ''}
+                        onClick={() => {
+                          setBrand(item);
+                          setIsBrandMenuOpen(false);
+                        }}
+                      >
+                        <span>{label}</span>
+                        {isSelected && <Check size={18} strokeWidth={2.2} aria-hidden="true" />}
+                      </button>
+                    );
+                  })}
+                </motion.div>
+              )}
+            </AnimatePresence>
+          </div>
         </div>
       )}
 
