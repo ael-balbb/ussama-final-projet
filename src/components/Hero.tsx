@@ -30,7 +30,7 @@ const Hero: React.FC = () => {
           transition={reduceMotion ? { duration: 0 } : { type: 'spring', stiffness: 170, damping: 24 }}
         >
           <h1 className="hero-title">
-            Boostez votre
+            Boostez votre{' '}
             <br />
             vie numérique
           </h1>

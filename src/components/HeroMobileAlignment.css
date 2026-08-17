@@ -4,13 +4,23 @@
   }
 
   .hero-overlay {
-    background: linear-gradient(
-      0deg,
-      rgba(0, 0, 0, 0.95) 0%,
-      rgba(0, 0, 0, 0.78) 32%,
-      rgba(0, 0, 0, 0.34) 68%,
-      rgba(0, 0, 0, 0.06) 100%
-    );
+    background:
+      linear-gradient(
+        90deg,
+        rgba(0, 0, 0, 0.34) 0%,
+        rgba(0, 0, 0, 0.08) 9%,
+        transparent 18%,
+        transparent 82%,
+        rgba(0, 0, 0, 0.08) 91%,
+        rgba(0, 0, 0, 0.34) 100%
+      ),
+      linear-gradient(
+        0deg,
+        rgba(0, 0, 0, 0.95) 0%,
+        rgba(0, 0, 0, 0.78) 32%,
+        rgba(0, 0, 0, 0.34) 68%,
+        rgba(0, 0, 0, 0.06) 100%
+      );
   }
 
   .hero-content-wrap {
