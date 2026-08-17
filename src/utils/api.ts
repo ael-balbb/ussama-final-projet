@@ -1,4 +1,4 @@
-import type { AdminAuth, CartItem, Order, Pack, Product } from '../types';
+import type { AdminAuth, CartItem, Order, Pack, Product, ProductColor } from '../types';
 
 // Vite proxies /api to Railway in development. Production uses the explicit URL.
 const API_URL = import.meta.env.DEV ? '' : (import.meta.env.VITE_API_URL || '');
@@ -53,6 +53,37 @@ const normalizeProduct = (product: Product): Product => ({
   sort_order: Number(product.sort_order) || 0,
 });
 
+const normalizeColorForComparison = (color: ProductColor) => ({
+  name: color.name.trim(),
+  hex: color.hex.trim().toLowerCase(),
+  image: color.image?.trim() || '',
+  stock: Number(color.stock) || 0,
+  available: color.available !== false,
+});
+
+const assertColorsWereSaved = (requested: Partial<Product>, saved: Product) => {
+  if (!Array.isArray(requested.colors)) return;
+
+  const requestedColors = requested.colors.map(normalizeColorForComparison);
+  const savedColors = (saved.colors || []).map(normalizeColorForComparison);
+  const colorsMatch = requestedColors.length === savedColors.length
+    && requestedColors.every((color, index) => {
+      const savedColor = savedColors[index];
+      return savedColor
+        && color.name === savedColor.name
+        && color.hex === savedColor.hex
+        && color.image === savedColor.image
+        && color.stock === savedColor.stock
+        && color.available === savedColor.available;
+    });
+
+  if (!colorsMatch) {
+    throw new Error(
+      "Les coloris n'ont pas été enregistrés par le serveur. Mettez à jour le backend Railway, puis réessayez.",
+    );
+  }
+};
+
 const normalizePack = (pack: Pack): Pack => ({
   ...pack,
   price: Number(pack.price) || 0,
@@ -102,7 +133,9 @@ export const createProduct = async (product: Partial<Product>): Promise<Product>
     body: JSON.stringify(product),
   });
   const data = await readResponse<{ product: Product }>(response);
-  return normalizeProduct(data.product);
+  const savedProduct = normalizeProduct(data.product);
+  assertColorsWereSaved(product, savedProduct);
+  return savedProduct;
 };
 
 export const updateProduct = async (id: string, product: Partial<Product>): Promise<Product> => {
@@ -112,7 +145,9 @@ export const updateProduct = async (id: string, product: Partial<Product>): Prom
     body: JSON.stringify(product),
   });
   const data = await readResponse<{ product: Product }>(response);
-  return normalizeProduct(data.product);
+  const savedProduct = normalizeProduct(data.product);
+  assertColorsWereSaved(product, savedProduct);
+  return savedProduct;
 };
 
 export const deleteProduct = async (id: string): Promise<void> => {

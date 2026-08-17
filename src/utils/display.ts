@@ -88,35 +88,6 @@ export const getBadges = (product: Product): ProductBadge[] => {
   return badges.slice(0, 2);
 };
 
-type ReferenceColor = { name: string; hex: string; imageIndex?: number };
-
-const REFERENCE_COLOR_FALLBACKS: Record<string, ReferenceColor[]> = {
-  'iphone 13 pro': [
-    // The legacy gallery was uploaded as Or, Vert, Bleu, Argent, Graphite.
-    { name: 'Bleu alpin', hex: '#a8c6e0', imageIndex: 2 },
-    { name: 'Graphite', hex: '#4a4a4a', imageIndex: 4 },
-    { name: 'Argent', hex: '#ededed', imageIndex: 3 },
-    { name: 'Vert alpin', hex: '#6d786b', imageIndex: 1 },
-  ],
-  'iphone 13 pro max': [
-    { name: 'Graphite', hex: '#4a4a4a' },
-    { name: 'Bleu alpin', hex: '#a8c6e0' },
-    { name: 'Or', hex: '#d4b483' },
-    { name: 'Argent', hex: '#ededed' },
-  ],
-  'iphone 15 normal': [
-    { name: 'Rose', hex: '#efb3ba' },
-    { name: 'Vert', hex: '#c6e98b' },
-    { name: 'Bleu', hex: '#a8cbe1' },
-    { name: 'Noir', hex: '#292c32' },
-  ],
-  'samsung s23 ultra': [
-    { name: 'Noir', hex: '#303332' },
-    { name: 'Vert', hex: '#6c776c' },
-    { name: 'Crème', hex: '#f0e5d2' },
-  ],
-};
-
 const getProductGallery = (product: Product) => {
   const candidates = [...(product.images || []), product.image || '']
     .filter((image): image is string => Boolean(image?.trim()));
@@ -135,17 +106,7 @@ export const getAvailableColors = (product: Product): ProductColor[] => {
       image: color.image?.trim() || gallery[index] || gallery[0] || '',
     }));
 
-  if (configuredColors.length > 0) return configuredColors;
-
-  const referenceColors = REFERENCE_COLOR_FALLBACKS[product.name.trim().toLowerCase()] || [];
-  return referenceColors.map((color, index) => ({
-    name: color.name,
-    hex: color.hex,
-    // Legacy products stored color photos only in `images`. Assign a distinct
-    // gallery photo to each fallback swatch instead of reusing image zero.
-    image: gallery[color.imageIndex ?? index] || gallery[index] || gallery[0] || '',
-    stock: product.stock,
-    available: product.stock > 0,
-    sort_order: index,
-  }));
+  // Never invent storefront swatches from the product name. A color is shown
+  // only when the exact name and hex value were configured in the admin.
+  return configuredColors;
 };
