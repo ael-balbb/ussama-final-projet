@@ -30,6 +30,12 @@ const tierLabels: Record<PackTier, string> = {
   bronze: 'Pack Bronze',
 };
 
+const tierOrder: Record<PackTier, number> = {
+  gold: 0,
+  silver: 1,
+  bronze: 2,
+};
+
 const packToProduct = (pack: Pack): Product => {
   const presentationImage = pack.name.trim().toLowerCase() === 'pack apple gold'
     ? '/pack-apple-gold.png'
@@ -59,7 +65,9 @@ const MomentOffer: React.FC<MomentOfferProps> = ({ packs, onAddToCart }) => {
   const reduceMotion = useReducedMotion();
 
   const activePacks = useMemo(
-    () => packs.filter((pack) => pack.is_active !== false),
+    () => packs
+      .filter((pack) => pack.is_active !== false)
+      .sort((first, second) => tierOrder[getPackTier(first)] - tierOrder[getPackTier(second)]),
     [packs],
   );
   const safeActiveIndex = activeIndex < activePacks.length ? activeIndex : 0;
