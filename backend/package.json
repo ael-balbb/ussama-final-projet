@@ -1,6 +1,6 @@
 {
   "name": "nasri-phone-backend",
-  "version": "1.0.0",
+  "version": "2.0.0",
   "description": "Nasri Phone Store Backend API",
   "main": "dist/index.js",
   "scripts": {

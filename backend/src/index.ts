@@ -13,6 +13,11 @@ import uploadRoutes from './routes/upload';
 
 const app = express();
 const PORT = process.env.PORT || 3001;
+const API_VERSION = '2.0.0';
+const deployment = {
+  commit: process.env.RAILWAY_GIT_COMMIT_SHA || null,
+  branch: process.env.RAILWAY_GIT_BRANCH || null,
+};
 
 // CORS configuration
 const allowedOrigins = [
@@ -73,12 +78,13 @@ app.use('/api/upload', uploadRoutes);
 app.get('/api/health', (_req, res) => {
   res.json({
     status: 'ok',
-    version: '2.0.0',
+    version: API_VERSION,
     capabilities: {
       product_colors: true,
       storage_variants: true,
       admin_catalog: true,
     },
+    deployment,
     timestamp: new Date().toISOString(),
   });
 });
@@ -87,7 +93,8 @@ app.get('/api/health', (_req, res) => {
 app.get('/', (_req, res) => {
   res.json({ 
     message: 'Nasri Phone Store API',
-    version: '2.0.0',
+    version: API_VERSION,
+    deployment,
     endpoints: [
       'GET  /api/health',
       'POST /api/auth/login',
@@ -109,5 +116,6 @@ app.use((error: Error, _req: express.Request, res: express.Response, next: expre
 // Start server
 app.listen(PORT, () => {
   console.log(`🚀 Nasri Phone Store API running on port ${PORT}`);
+  console.log(`🏷️ API version ${API_VERSION}; commit ${deployment.commit || 'local'}; branch ${deployment.branch || 'local'}`);
   console.log(`📡 Health check: http://localhost:${PORT}/api/health`);
 });
