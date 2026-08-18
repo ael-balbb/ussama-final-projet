@@ -1532,14 +1532,14 @@ const AdminPanel: React.FC = () => {
                     />
                   </div>
                   <div className="form-group-admin">
-                    <label>Couleur</label>
+                    <label>Style du pack</label>
                     <select
                       value={packForm.color}
                       onChange={(e) => setPackForm({ ...packForm, color: e.target.value as 'dark' | 'yellow' | 'red' })}
                     >
-                      <option value="dark">🖤 Sombre</option>
-                      <option value="yellow">💛 Jaune</option>
-                      <option value="red">❤️ Rouge</option>
+                      <option value="dark">⚪ Silver</option>
+                      <option value="yellow">🟡 Gold</option>
+                      <option value="red">🟤 Bronze</option>
                     </select>
                   </div>
                 </div>

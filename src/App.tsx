@@ -68,7 +68,7 @@ function HomePage({
         <Hero />
         <BrandMarquee />
         <ImmersiveBanner />
-        <MomentOffer pack={packs[0]} onAddToCart={addToCart} />
+        <MomentOffer packs={packs} onAddToCart={addToCart} />
         <NewArrivals
           products={products}
           status={status}
