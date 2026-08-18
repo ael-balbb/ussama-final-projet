@@ -150,27 +150,6 @@
 .product-card-prices strong { color: #111; font-size: 15px; font-weight: 750; white-space: nowrap; }
 .product-card-prices del { color: #888; font-size: 10px; white-space: nowrap; }
 
-.product-card-favorite,
-.product-card-quickview {
-  position: absolute;
-  z-index: 3;
-  display: inline-flex;
-  align-items: center;
-  justify-content: center;
-  border: 0;
-  background: #fff;
-  color: #9a9aa0;
-  transition: color 160ms ease, background-color 160ms ease, transform 100ms ease;
-}
-
-.product-card-favorite { top: 7px; right: 7px; width: 27px; height: 27px; border-radius: 50%; }
-.product-card-favorite:hover,
-.product-card-favorite.active { color: #111; }
-.product-card-quickview { right: 8px; bottom: 8px; width: 31px; height: 31px; border: 1px solid #dddde0; border-radius: 8px; color: #111; }
-.product-card-quickview:hover { background: var(--primary); border-color: var(--primary); }
-.product-card-favorite:active,
-.product-card-quickview:active { transform: scale(0.9); }
-
 .product-card-catalog {
   height: 342px;
   contain-intrinsic-size: 342px;
@@ -194,8 +173,6 @@
 .product-card-catalog .product-card-prices { margin-top: 8px; }
 .product-card-catalog .product-card-prices strong { font-size: 18px; }
 .product-card-catalog .product-card-prices del { font-size: 13px; }
-.product-card-catalog .product-card-quickview { display: none; }
-
 @media (min-width: 761px) {
   .product-card-compact .product-card-image { transform: scale(1.1); }
   .product-card-compact:hover .product-card-image { transform: scale(1.14); }
@@ -229,10 +206,6 @@
   .product-card-compact .product-card-prices del { font-size: 7px; }
   .product-card-compact .product-card-badges { top: 5px; left: 5px; }
   .product-card-compact .product-badge { min-height: 14px; padding: 1px 5px; border-radius: 4px; font-size: 7px; }
-  .product-card-compact .product-card-favorite { top: 3px; right: 3px; width: 22px; height: 22px; }
-  .product-card-compact .product-card-quickview { right: 4px; bottom: 4px; width: 23px; height: 23px; border-radius: 6px; }
-  .product-card-compact .product-card-quickview svg { width: 16px; height: 16px; }
-
   .product-card-catalog { height: 294px; }
   .product-card-catalog .product-card-open { padding: 34px 12px 14px; }
   .product-card-catalog .product-card-media { height: 150px; flex-basis: 150px; }

@@ -1,6 +1,5 @@
 import { useState } from 'react';
 import { motion, useReducedMotion } from 'framer-motion';
-import { Eye, Heart } from 'lucide-react';
 import type { AddToCartHandler, Product } from '../types';
 import ProductModal from './ProductModal';
 import {
@@ -20,7 +19,6 @@ interface ProductCardProps {
 
 export default function ProductCard({ product, onAddToCart, variant = 'compact' }: ProductCardProps) {
   const [isModalOpen, setIsModalOpen] = useState(false);
-  const [favorite, setFavorite] = useState(false);
   const reduceMotion = useReducedMotion();
   const badges = getBadges(product);
   const storageVariants = getStorageVariants(product);
@@ -95,24 +93,6 @@ export default function ProductCard({ product, onAddToCart, variant = 'compact' 
           </div>
         </button>
 
-        <button
-          type="button"
-          className={`product-card-favorite ${favorite ? 'active' : ''}`}
-          onClick={() => setFavorite((current) => !current)}
-          aria-label={favorite ? `Retirer ${product.name} des favoris` : `Ajouter ${product.name} aux favoris`}
-          aria-pressed={favorite}
-        >
-          <Heart size={19} strokeWidth={1.6} fill={favorite ? 'currentColor' : 'none'} />
-        </button>
-
-        <button
-          type="button"
-          className="product-card-quickview"
-          onClick={() => setIsModalOpen(true)}
-          aria-label={`Aperçu de ${product.name}`}
-        >
-          <Eye size={18} strokeWidth={1.6} />
-        </button>
       </motion.article>
 
       <ProductModal
