@@ -1,6 +1,6 @@
 import React, { useState, useEffect, useCallback } from 'react';
 import { useNavigate } from 'react-router-dom';
-import { motion, AnimatePresence } from 'framer-motion';
+import { motion, AnimatePresence, Reorder } from 'framer-motion';
 import {
   Package, ShoppingBag, ClipboardList, LogOut, Plus, Edit3, Trash2,
   X, Upload, Search, Filter, ChevronDown,
@@ -61,6 +61,123 @@ interface PackForm {
   sort_order: string;
 }
 
+interface SortableColorRowProps {
+  color: ProductColor;
+  index: number;
+  fallbackStock: number;
+  isUploading: boolean;
+  onUpdate: (index: number, changes: Partial<ProductColor>) => void;
+  onReplaceImage: (index: number, event: React.ChangeEvent<HTMLInputElement>) => void;
+  onRemove: (index: number) => void;
+  onMove: (fromIndex: number, toIndex: number) => void;
+}
+
+const SortableColorRow: React.FC<SortableColorRowProps> = ({
+  color,
+  index,
+  fallbackStock,
+  isUploading,
+  onUpdate,
+  onReplaceImage,
+  onRemove,
+  onMove,
+}) => {
+  const handleMoveKey = (event: React.KeyboardEvent<HTMLButtonElement>) => {
+    if (event.key === 'ArrowUp' && index > 0) {
+      event.preventDefault();
+      onMove(index, index - 1);
+    }
+    if (event.key === 'ArrowDown') {
+      event.preventDefault();
+      onMove(index, index + 1);
+    }
+  };
+
+  return (
+    <Reorder.Item
+      as="div"
+      value={color}
+      className="color-admin-item"
+      whileDrag={{ scale: 1.01, boxShadow: '0 12px 28px rgba(0, 0, 0, 0.14)' }}
+    >
+      <button
+        type="button"
+        className="color-drag-handle"
+        onKeyDown={handleMoveKey}
+        aria-label={`Déplacer ${color.name}. Utilisez les flèches haut et bas au clavier.`}
+        title="Glisser pour réorganiser"
+      >
+        <GripVertical size={16} aria-hidden="true" />
+      </button>
+
+      <label
+        className={`color-image-edit ${isUploading ? 'uploading' : ''}`}
+        title={`Changer l'image ${color.name}`}
+        onPointerDown={(event) => event.stopPropagation()}
+      >
+        <img src={color.image} alt={color.name} />
+        <span className="color-image-edit-badge">
+          {isUploading ? <RefreshCw className="spin" size={12} /> : <Edit3 size={12} />}
+        </span>
+        <input
+          type="file"
+          accept="image/jpeg,image/png,image/webp"
+          onChange={(event) => onReplaceImage(index, event)}
+          disabled={isUploading}
+        />
+      </label>
+
+      <div className="color-admin-details" onPointerDown={(event) => event.stopPropagation()}>
+        <input
+          className="color-admin-name-input"
+          value={color.name}
+          onChange={(event) => onUpdate(index, { name: event.target.value })}
+          aria-label={`Nom du coloris ${index + 1}`}
+        />
+        <label className="color-admin-hex-picker" title={`Modifier la pastille ${color.name}`}>
+          <input
+            type="color"
+            value={color.hex}
+            onChange={(event) => onUpdate(index, { hex: event.target.value })}
+            aria-label={`Couleur de la pastille ${color.name}`}
+          />
+        </label>
+        {index === 0 && <small>Coloris principal</small>}
+      </div>
+
+      <label className="color-stock-field" onPointerDown={(event) => event.stopPropagation()}>
+        <span>Stock</span>
+        <input
+          type="number"
+          min="0"
+          value={color.stock ?? fallbackStock}
+          onChange={(event) => onUpdate(index, { stock: Math.max(0, Number(event.target.value) || 0) })}
+          aria-label={`Stock ${color.name}`}
+        />
+      </label>
+
+      <label className="color-availability" onPointerDown={(event) => event.stopPropagation()}>
+        <input
+          type="checkbox"
+          checked={color.available !== false}
+          onChange={(event) => onUpdate(index, { available: event.target.checked })}
+        />
+        Disponible
+      </label>
+
+      <button
+        type="button"
+        className="remove-image-btn"
+        onPointerDown={(event) => event.stopPropagation()}
+        onClick={() => onRemove(index)}
+        aria-label={`Supprimer ${color.name}`}
+      >
+        <X size={14} />
+      </button>
+    </Reorder.Item>
+  );
+};
+
 const emptyProductForm: ProductForm = {
   name: '', category: 'phone', brand: '', price: '', compare_at_price: '', promo_label: '',
   stock: '', description: '', images: [], colors: [], storage_variants: [], is_featured: false, is_new: false,
@@ -97,6 +214,7 @@ const AdminPanel: React.FC = () => {
   const [newColorHex, setNewColorHex] = useState(PRESET_COLORS[0].hex);
   const [newColorStock, setNewColorStock] = useState('0');
   const [uploadingColorImage, setUploadingColorImage] = useState(false);
+  const [updatingColorImageKey, setUpdatingColorImageKey] = useState<string | null>(null);
   const [newStorageCapacity, setNewStorageCapacity] = useState('128 Go');
   const [newStoragePrice, setNewStoragePrice] = useState('');
   const [newStorageComparePrice, setNewStorageComparePrice] = useState('');
@@ -287,8 +405,79 @@ const AdminPanel: React.FC = () => {
   const removeColor = (index: number) => {
     setProductForm((prev) => ({
       ...prev,
-      colors: prev.colors.filter((_, i) => i !== index),
+      colors: prev.colors
+        .filter((_, i) => i !== index)
+        .map((color, colorIndex) => ({ ...color, sort_order: colorIndex })),
     }));
+  };
+
+  const updateColor = (index: number, changes: Partial<ProductColor>) => {
+    setProductForm((prev) => ({
+      ...prev,
+      colors: prev.colors.map((color, colorIndex) => colorIndex === index
+        ? { ...color, ...changes }
+        : color),
+    }));
+  };
+
+  const reorderColors = (colors: ProductColor[]) => {
+    setProductForm((prev) => ({
+      ...prev,
+      colors,
+    }));
+  };
+
+  const moveColor = (fromIndex: number, toIndex: number) => {
+    setProductForm((prev) => {
+      if (toIndex < 0 || toIndex >= prev.colors.length || fromIndex === toIndex) return prev;
+      const colors = [...prev.colors];
+      const [movedColor] = colors.splice(fromIndex, 1);
+      colors.splice(toIndex, 0, movedColor);
+      return {
+        ...prev,
+        colors: colors.map((color, index) => ({ ...color, sort_order: index })),
+      };
+    });
+  };
+
+  const handleExistingColorImageUpload = async (
+    index: number,
+    event: React.ChangeEvent<HTMLInputElement>,
+  ) => {
+    const input = event.target;
+    const file = input.files?.[0];
+    if (!file) return;
+    const previousImage = productForm.colors[index]?.image || '';
+
+    setUpdatingColorImageKey(previousImage);
+    try {
+      const urls = await uploadImages([file]);
+      const imageUrl = urls[0];
+      if (!imageUrl) throw new Error('Upload failed');
+
+      setProductForm((prev) => {
+        const currentIndex = prev.colors.findIndex((color) => color.image === previousImage);
+        if (currentIndex < 0) return prev;
+        const imageUsedByAnotherColor = prev.colors.some((color, colorIndex) => (
+          colorIndex !== currentIndex && color.image === previousImage
+        ));
+        return {
+          ...prev,
+          images: previousImage && !imageUsedByAnotherColor
+            ? prev.images.filter((image) => image !== previousImage)
+            : prev.images,
+          colors: prev.colors.map((color, colorIndex) => colorIndex === currentIndex
+            ? { ...color, image: imageUrl }
+            : color),
+        };
+      });
+    } catch (error) {
+      console.error('Color image update error:', error);
+      alert("Erreur lors du remplacement de l'image du coloris");
+    } finally {
+      setUpdatingColorImageKey(null);
+      input.value = '';
+    }
   };
 
   const addStorageVariant = () => {
@@ -358,7 +547,7 @@ const AdminPanel: React.FC = () => {
         stock: sortedStorage.length > 0 ? storageStock : Number(productForm.stock),
         description: productForm.description,
         images,
-        colors: productForm.colors,
+        colors: productForm.colors.map((color, index) => ({ ...color, sort_order: index })),
         storage_variants: sortedStorage,
         is_featured: productForm.is_featured,
         is_new: productForm.is_new,
@@ -1277,59 +1466,31 @@ const AdminPanel: React.FC = () => {
                       {uploadingColorImage && <span className="uploading-badge">Téléchargement...</span>}
                     </label>
                     <p className="form-hint">
-                      Ajoutez chaque coloris avec sa photo. Sur la boutique, cliquer un coloris change l&apos;image.
+                      Modifiez le nom, la pastille, le stock ou la photo. Glissez un coloris pour changer son ordre ; le premier devient le coloris principal.
                     </p>
 
                     {productForm.colors.length > 0 && (
-                      <div className="colors-admin-list">
+                      <Reorder.Group
+                        as="div"
+                        axis="y"
+                        values={productForm.colors}
+                        onReorder={reorderColors}
+                        className="colors-admin-list"
+                      >
                         {productForm.colors.map((color, idx) => (
-                          <div key={`${color.name}-${idx}`} className="color-admin-item">
-                            <GripVertical className="color-drag-handle" size={16} aria-hidden="true" />
-                            <img src={color.image} alt={color.name} />
-                            <span
-                              className="color-admin-swatch"
-                              style={{ backgroundColor: color.hex }}
-                              aria-hidden="true"
-                            />
-                            <span className="color-admin-name">{color.name}</span>
-                            <label className="color-stock-field">
-                              <span>Stock</span>
-                              <input
-                                type="number"
-                                min="0"
-                                value={color.stock ?? (Number(productForm.stock) || 0)}
-                                onChange={(e) => setProductForm((prev) => ({
-                                  ...prev,
-                                  colors: prev.colors.map((item, colorIndex) => colorIndex === idx
-                                    ? { ...item, stock: Math.max(0, Number(e.target.value) || 0) }
-                                    : item),
-                                }))}
-                              />
-                            </label>
-                            <label className="color-availability">
-                              <input
-                                type="checkbox"
-                                checked={color.available !== false}
-                                onChange={(e) => setProductForm((prev) => ({
-                                  ...prev,
-                                  colors: prev.colors.map((item, colorIndex) => colorIndex === idx
-                                    ? { ...item, available: e.target.checked }
-                                    : item),
-                                }))}
-                              />
-                              Disponible
-                            </label>
-                            <button
-                              type="button"
-                              className="remove-image-btn"
-                              onClick={() => removeColor(idx)}
-                              aria-label={`Supprimer ${color.name}`}
-                            >
-                              <X size={14} />
-                            </button>
-                          </div>
+                          <SortableColorRow
+                            key={color.image || `color-${idx}`}
+                            color={color}
+                            index={idx}
+                            fallbackStock={Number(productForm.stock) || 0}
+                            isUploading={updatingColorImageKey === color.image}
+                            onUpdate={updateColor}
+                            onReplaceImage={handleExistingColorImageUpload}
+                            onRemove={removeColor}
+                            onMove={moveColor}
+                          />
                         ))}
-                      </div>
+                      </Reorder.Group>
                     )}
 
                     {productForm.colors.length < 8 && (
@@ -1416,8 +1577,8 @@ const AdminPanel: React.FC = () => {
                     <strong>Aperçu boutique</strong>
                     <span>{productForm.name || 'Nom du produit'}</span>
                     <div className="preview-image-wrap">
-                      {productForm.images[0] || productForm.colors[0]?.image ? (
-                        <img src={productForm.images[0] || productForm.colors[0]?.image} alt="" />
+                      {productForm.colors[0]?.image || productForm.images[0] ? (
+                        <img src={productForm.colors[0]?.image || productForm.images[0]} alt="" />
                       ) : (
                         <Image size={44} />
                       )}
