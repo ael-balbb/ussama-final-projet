@@ -1,5 +1,5 @@
 import { Banknote, Mail, MapPin, MessageCircle, Phone, RefreshCw, ShieldCheck, Truck } from 'lucide-react';
-import { FaFacebookF, FaInstagram, FaTiktok, FaYoutube } from 'react-icons/fa6';
+import { FaFacebookF, FaInstagram, FaTiktok } from 'react-icons/fa6';
 import { Link } from 'react-router-dom';
 import './Footer.css';
 
@@ -60,7 +60,6 @@ export default function Footer({ compact = false }: { compact?: boolean }) {
               <a href="https://www.facebook.com/nasriphone" target="_blank" rel="noopener noreferrer" aria-label="Facebook"><FaFacebookF /></a>
               <a href="https://www.instagram.com/nasri_phone83" target="_blank" rel="noopener noreferrer" aria-label="Instagram"><FaInstagram /></a>
               <a href="https://www.tiktok.com/@nasriphone" target="_blank" rel="noopener noreferrer" aria-label="TikTok"><FaTiktok /></a>
-              <a href="https://www.youtube.com/@nasriphone" target="_blank" rel="noopener noreferrer" aria-label="YouTube"><FaYoutube /></a>
             </div>
           </div>
 

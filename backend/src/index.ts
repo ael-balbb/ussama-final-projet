@@ -71,14 +71,23 @@ app.use('/api/upload', uploadRoutes);
 
 // Health check
 app.get('/api/health', (_req, res) => {
-  res.json({ status: 'ok', timestamp: new Date().toISOString() });
+  res.json({
+    status: 'ok',
+    version: '2.0.0',
+    capabilities: {
+      product_colors: true,
+      storage_variants: true,
+      admin_catalog: true,
+    },
+    timestamp: new Date().toISOString(),
+  });
 });
 
 // Root
 app.get('/', (_req, res) => {
   res.json({ 
     message: 'Nasri Phone Store API',
-    version: '1.0.0',
+    version: '2.0.0',
     endpoints: [
       'GET  /api/health',
       'POST /api/auth/login',

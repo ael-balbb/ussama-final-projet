@@ -20,6 +20,33 @@ const getAuthHeaders = (): Record<string, string> => {
   };
 };
 
+interface ApiHealth {
+  status: string;
+  version?: string;
+  capabilities?: {
+    product_colors?: boolean;
+    storage_variants?: boolean;
+    admin_catalog?: boolean;
+  };
+}
+
+const assertCatalogApiIsCurrent = async (product: Partial<Product>) => {
+  const needsColorSupport = Array.isArray(product.colors);
+  const needsStorageSupport = Array.isArray(product.storage_variants);
+  if (!needsColorSupport && !needsStorageSupport) return;
+
+  const response = await fetch(`${API_URL}/api/health`, { cache: 'no-store' });
+  const health = await readResponse<ApiHealth>(response);
+  const supportsPayload = (!needsColorSupport || health.capabilities?.product_colors === true)
+    && (!needsStorageSupport || health.capabilities?.storage_variants === true);
+
+  if (!supportsPayload) {
+    throw new Error(
+      "Railway utilise encore l'ancienne API. Attendez le déploiement de la version 2.0.0 avant de réessayer.",
+    );
+  }
+};
+
 const normalizeProduct = (product: Product): Product => ({
   ...product,
   source: 'product',
@@ -127,6 +154,7 @@ export const fetchProducts = async (options: { admin?: boolean } = {}): Promise<
 };
 
 export const createProduct = async (product: Partial<Product>): Promise<Product> => {
+  await assertCatalogApiIsCurrent(product);
   const response = await fetch(`${API_URL}/api/products`, {
     method: 'POST',
     headers: getAuthHeaders(),
@@ -139,6 +167,7 @@ export const createProduct = async (product: Partial<Product>): Promise<Product>
 };
 
 export const updateProduct = async (id: string, product: Partial<Product>): Promise<Product> => {
+  await assertCatalogApiIsCurrent(product);
   const response = await fetch(`${API_URL}/api/products/${id}`, {
     method: 'PUT',
     headers: getAuthHeaders(),
