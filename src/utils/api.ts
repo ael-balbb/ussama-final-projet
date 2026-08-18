@@ -47,13 +47,38 @@ const assertCatalogApiIsCurrent = async (product: Partial<Product>) => {
   }
 };
 
+const inferBrandFromProductName = (name: string): string => {
+  const normalizedName = name.trim().toLowerCase();
+  const knownBrands: Array<[RegExp, string]> = [
+    [/\b(iphone|ipad|airpods?|magsafe|apple\s*watch|macbook|apple)\b/i, 'Apple'],
+    [/\b(samsung|galaxy)\b/i, 'Samsung'],
+    [/\b(xiaomi|redmi|poco)\b/i, 'Xiaomi'],
+    [/\bhuawei\b/i, 'Huawei'],
+    [/\boppo\b/i, 'OPPO'],
+    [/\binfinix\b/i, 'Infinix'],
+    [/\bjbl\b/i, 'JBL'],
+    [/\banker\b/i, 'Anker'],
+  ];
+
+  return knownBrands.find(([pattern]) => pattern.test(normalizedName))?.[1] || '';
+};
+
+const normalizeProductBrand = (product: Product): string => {
+  const brand = String(product.brand || '').trim();
+  const isNumericValue = /^\d+(?:[.,]\d+)?$/.test(brand);
+
+  return brand && !isNumericValue ? brand : inferBrandFromProductName(product.name || '');
+};
+
 const normalizeProduct = (product: Product): Product => ({
   ...product,
   source: 'product',
   price: Number(product.price) || 0,
   compare_at_price: product.compare_at_price == null ? null : Number(product.compare_at_price),
   stock: Number(product.stock) || 0,
-  brand: product.brand || '',
+  // A malformed admin entry once put a price in `brand`. Keep numeric values
+  // out of the storefront filters and recover well-known brands from the name.
+  brand: normalizeProductBrand(product),
   images: Array.isArray(product.images) ? product.images.filter(Boolean) : [],
   colors: Array.isArray(product.colors)
     ? product.colors.map((color, index) => ({
