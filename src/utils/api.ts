@@ -1,4 +1,5 @@
 import type { AdminAuth, CartItem, Order, Pack, Product, ProductColor } from '../types';
+import { normalizeProductBrand } from './brands';
 
 // Vite proxies /api to Railway in development. Production uses the explicit URL.
 const API_URL = import.meta.env.DEV ? '' : (import.meta.env.VITE_API_URL || '');
@@ -47,29 +48,6 @@ const assertCatalogApiIsCurrent = async (product: Partial<Product>) => {
   }
 };
 
-const inferBrandFromProductName = (name: string): string => {
-  const normalizedName = name.trim().toLowerCase();
-  const knownBrands: Array<[RegExp, string]> = [
-    [/\b(iphone|ipad|airpods?|magsafe|apple\s*watch|macbook|apple)\b/i, 'Apple'],
-    [/\b(samsung|galaxy)\b/i, 'Samsung'],
-    [/\b(xiaomi|redmi|poco)\b/i, 'Xiaomi'],
-    [/\bhuawei\b/i, 'Huawei'],
-    [/\boppo\b/i, 'OPPO'],
-    [/\binfinix\b/i, 'Infinix'],
-    [/\bjbl\b/i, 'JBL'],
-    [/\banker\b/i, 'Anker'],
-  ];
-
-  return knownBrands.find(([pattern]) => pattern.test(normalizedName))?.[1] || '';
-};
-
-const normalizeProductBrand = (product: Product): string => {
-  const brand = String(product.brand || '').trim();
-  const isNumericValue = /^\d+(?:[.,]\d+)?$/.test(brand);
-
-  return brand && !isNumericValue ? brand : inferBrandFromProductName(product.name || '');
-};
-
 const normalizeProduct = (product: Product): Product => ({
   ...product,
   source: 'product',
@@ -78,7 +56,7 @@ const normalizeProduct = (product: Product): Product => ({
   stock: Number(product.stock) || 0,
   // A malformed admin entry once put a price in `brand`. Keep numeric values
   // out of the storefront filters and recover well-known brands from the name.
-  brand: normalizeProductBrand(product),
+  brand: normalizeProductBrand(product.brand, product.name),
   images: Array.isArray(product.images) ? product.images.filter(Boolean) : [],
   colors: Array.isArray(product.colors)
     ? product.colors.map((color, index) => ({

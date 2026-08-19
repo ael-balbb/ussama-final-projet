@@ -1,6 +1,6 @@
 import assert from 'node:assert/strict';
 import test from 'node:test';
-import { cleanColors } from '../src/utils/catalog';
+import { cleanColors, cleanProductBrand } from '../src/utils/catalog';
 
 test('cleanColors preserves the admin color payload stored in Supabase', () => {
   const image = 'https://example.supabase.co/storage/v1/object/public/product-images/iphone-14-blue.jpg';
@@ -25,4 +25,15 @@ test('cleanColors preserves the admin color payload stored in Supabase', () => {
 
 test('cleanColors rejects malformed colors instead of storing invalid JSON', () => {
   assert.deepEqual(cleanColors([{ name: 'Bleu', hex: 'blue' }], 20), []);
+});
+
+test('cleanProductBrand canonicalizes supported brands and known misspellings', () => {
+  assert.equal(cleanProductBrand(' samsung '), 'Samsung');
+  assert.equal(cleanProductBrand('Smasung'), 'Samsung');
+  assert.equal(cleanProductBrand('oppo'), 'OPPO');
+});
+
+test('cleanProductBrand rejects prices and unsupported free text', () => {
+  assert.throws(() => cleanProductBrand('9400'), /Marque invalide/);
+  assert.throws(() => cleanProductBrand('Samsong'), /Marque invalide/);
 });

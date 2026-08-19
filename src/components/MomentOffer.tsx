@@ -37,10 +37,6 @@ const tierOrder: Record<PackTier, number> = {
 };
 
 const packToProduct = (pack: Pack): Product => {
-  const presentationImage = pack.name.trim().toLowerCase() === 'pack apple gold'
-    ? '/pack-apple-gold.png'
-    : pack.image;
-
   return {
     id: pack.id,
     source: 'pack',
@@ -48,8 +44,8 @@ const packToProduct = (pack: Pack): Product => {
     price: pack.price,
     compare_at_price: pack.compare_at_price,
     promo_label: pack.promo_label,
-    images: presentationImage ? [presentationImage] : [],
-    image: presentationImage || '',
+    images: pack.image ? [pack.image] : [],
+    image: pack.image || '',
     description: pack.description || pack.name,
     category: 'accessory',
     brand: 'Promo',

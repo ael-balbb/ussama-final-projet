@@ -16,8 +16,30 @@ export interface CatalogStorageVariant {
   sort_order: number;
 }
 
+export const PRODUCT_BRANDS = [
+  'Apple', 'Samsung', 'Xiaomi', 'Huawei', 'OPPO', 'Infinix', 'Honor', 'Realme',
+  'OnePlus', 'Google', 'Motorola', 'Nokia', 'Sony', 'Asus', 'Tecno', 'JBL', 'Anker',
+] as const;
+
+const BRAND_ALIASES: Record<string, string> = {
+  smasung: 'Samsung',
+  samsug: 'Samsung',
+};
+
 export const cleanText = (value: unknown, maxLength: number) =>
   typeof value === 'string' ? value.trim().slice(0, maxLength) : '';
+
+export const cleanProductBrand = (value: unknown) => {
+  const brand = cleanText(value, 80).replace(/\s+/g, ' ');
+  if (!brand) return '';
+
+  const normalizedKey = brand.toLowerCase();
+  const canonicalBrand = PRODUCT_BRANDS.find((item) => item.toLowerCase() === normalizedKey);
+  if (canonicalBrand) return canonicalBrand;
+  if (BRAND_ALIASES[normalizedKey]) return BRAND_ALIASES[normalizedKey];
+
+  throw new Error('Marque invalide. Choisissez une marque dans la liste');
+};
 
 export const nonNegativeNumber = (value: unknown, field: string) => {
   const parsed = Number(value);

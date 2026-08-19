@@ -4,6 +4,7 @@ import { authMiddleware } from '../middleware/auth';
 import {
   cleanColors,
   cleanImages,
+  cleanProductBrand,
   cleanStorageVariants,
   cleanText,
   nonNegativeInteger,
@@ -82,7 +83,7 @@ router.post('/', authMiddleware, async (req: Request, res: Response): Promise<vo
     const payload = {
       name,
       category,
-      brand: cleanText(req.body.brand, 80),
+      brand: cleanProductBrand(req.body.brand),
       price,
       compare_at_price: defaultStorage
         ? defaultStorage.compare_at_price
@@ -142,7 +143,7 @@ router.put('/:id', authMiddleware, async (req: Request, res: Response): Promise<
       if (!['phone', 'accessory'].includes(category)) throw new Error('Catégorie invalide');
       updateData.category = category;
     }
-    if (req.body.brand !== undefined) updateData.brand = cleanText(req.body.brand, 80);
+    if (req.body.brand !== undefined) updateData.brand = cleanProductBrand(req.body.brand);
     if (req.body.price !== undefined) updateData.price = price;
     if (req.body.compare_at_price !== undefined) {
       updateData.compare_at_price = optionalComparePrice(req.body.compare_at_price, price);

@@ -57,9 +57,9 @@ export default function Footer({ compact = false }: { compact?: boolean }) {
           <div className="footer-column footer-follow">
             <h2>Suivez-nous</h2>
             <div>
-              <a href="https://www.facebook.com/nasriphone" target="_blank" rel="noopener noreferrer" aria-label="Facebook"><FaFacebookF /></a>
+              <a href="https://www.facebook.com/profile.php?id=100067470919533" target="_blank" rel="noopener noreferrer" aria-label="Facebook"><FaFacebookF /></a>
               <a href="https://www.instagram.com/nasri_phone83" target="_blank" rel="noopener noreferrer" aria-label="Instagram"><FaInstagram /></a>
-              <a href="https://www.tiktok.com/@nasriphone" target="_blank" rel="noopener noreferrer" aria-label="TikTok"><FaTiktok /></a>
+              <a href="https://www.tiktok.com/@nasriphone1" target="_blank" rel="noopener noreferrer" aria-label="TikTok"><FaTiktok /></a>
             </div>
           </div>
 

@@ -13,6 +13,7 @@ import {
   fetchOrders, updateOrderStatus, deleteOrder, uploadImages
 } from '../utils/api';
 import type { Product, Pack, Order, ProductColor, ProductStorageVariant } from '../types';
+import { PRODUCT_BRANDS } from '../utils/brands';
 import './AdminPanel.css';
 
 type Tab = 'overview' | 'products' | 'packs' | 'orders';
@@ -1222,12 +1223,18 @@ const AdminPanel: React.FC = () => {
                   </div>
                   <div className="form-group-admin">
                     <label>Marque</label>
-                    <input
-                      type="text"
+                    <select
                       value={productForm.brand}
                       onChange={(e) => setProductForm({ ...productForm, brand: e.target.value })}
-                      placeholder="Ex: Apple"
-                    />
+                    >
+                      <option value="">Sélectionner une marque</option>
+                      {productForm.brand
+                        && !PRODUCT_BRANDS.some((brand) => brand === productForm.brand)
+                        && <option value={productForm.brand} disabled>{productForm.brand} — à corriger</option>}
+                      {PRODUCT_BRANDS.map((brand) => (
+                        <option key={brand} value={brand}>{brand}</option>
+                      ))}
+                    </select>
                   </div>
                 </div>
 
