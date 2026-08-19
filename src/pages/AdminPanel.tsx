@@ -1134,8 +1134,23 @@ const AdminPanel: React.FC = () => {
                           <h4>Produits commandés:</h4>
                           {Array.isArray(order.products_json) && order.products_json.map((item, idx) => (
                             <div key={idx} className="order-item-row">
-                              <span>{item.name}{item.storage ? ` · ${item.storage}` : ''}{item.color ? ` · ${item.color}` : ''} ×{item.quantity}</span>
-                              <span>{(Number(item.price) * item.quantity).toLocaleString()} DH</span>
+                              <div className="order-item-product">
+                                <div className="order-item-thumbnail">
+                                  <Package size={22} aria-hidden="true" />
+                                  {item.image && (
+                                    <img
+                                      src={item.image}
+                                      alt={`Photo de ${item.name}`}
+                                      loading="lazy"
+                                      onError={(event) => {
+                                        event.currentTarget.style.display = 'none';
+                                      }}
+                                    />
+                                  )}
+                                </div>
+                                <span>{item.name}{item.storage ? ` · ${item.storage}` : ''}{item.color ? ` · ${item.color}` : ''} ×{item.quantity}</span>
+                              </div>
+                              <span className="order-item-price">{(Number(item.price) * item.quantity).toLocaleString()} DH</span>
                             </div>
                           ))}
                           <div className="order-total-row">
